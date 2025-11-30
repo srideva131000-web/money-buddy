@@ -1,0 +1,9 @@
+{
+  "name": "Money Buddy",
+  "short_name": "MoneyBuddy",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f6d365",
+  "theme_color": "#f6d365",
+  "icons": []
+}
