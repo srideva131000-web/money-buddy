@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Money Buddy</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f6d365">
-
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f6d365">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
@@ -356,7 +355,6 @@
             box-shadow: var(--shadow-soft);
         }
 
-        /* transaction list */
         .tx-row {
             display: flex;
             justify-content: space-between;
@@ -392,6 +390,10 @@
             color: #F44336;
         }
 
+        .hidden {
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .app-container {
                 padding: 10px;
@@ -419,10 +421,6 @@
                 font-size: 1.5em;
                 padding: 10px;
             }
-        }
-
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -465,6 +463,13 @@
                 </div>
             </div>
 
+            <div class="card">
+                <h3>This month – daily spending 📅</h3>
+                <div class="year-chart-container" style="height:220px;">
+                    <canvas id="dailySpendingChart"></canvas>
+                </div>
+            </div>
+
             <!-- Add Transaction Form -->
             <div class="card">
                 <h3>Add transaction ✍️</h3>
@@ -493,6 +498,12 @@
                             <option value="Bills">Bills</option>
                             <option value="Other">Other</option>
                         </select>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        Description (optional):
+                        <input id="tx-description" type="text" placeholder="Breakfast with friends, cab to airport, etc.">
                     </label>
                 </div>
                 <div class="form-row">
@@ -623,8 +634,14 @@
 
         <!-- YEAR TAB -->
         <section id="year" class="tab-content hidden">
-            <h2 class="month-header" id="year-header">Year</h2>
-
+            <h2 class="month-header">
+                <span id="year-header">Year</span>
+            </h2>
+            <div style="text-align:center; margin-bottom:10px;">
+                <label for="year-select" style="font-size:0.85em; margin-right:4px;">View year:</label>
+                <select id="year-select" style="padding:6px 10px;border-radius:999px;border:1px solid #ddd;">
+                </select>
+            </div>
 
             <div class="stat-cards-grid">
                 <div class="card stat-card">
@@ -756,6 +773,9 @@
 
       let yearlyChart = null;
       let monthlyTotalsForChart = Array(12).fill(0);
+      let dailyChart = null;
+      let dailyTotalsForChart = [];
+      let selectedYearForYearView = null; // null = current year
 
       function loadState() {
         try {
@@ -793,7 +813,6 @@
         }
       }
 
-      // -------- Subscriptions ----------
       function deleteSubscription(id) {
         state.subscriptions = state.subscriptions.filter(s => s.id !== id);
         saveState();
@@ -839,11 +858,19 @@
         });
       }
 
-      // -------- Recalculate & Render ----------
       function recalcAndRender() {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
+        const yearViewYear = selectedYearForYearView || currentYear;
+
+        const yearHeader = document.getElementById('year-header');
+        if (yearHeader) {
+          yearHeader.textContent = 'Year ' + yearViewYear;
+        }
+
+        const daysInMonth  = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const dailyTotals  = Array(daysInMonth).fill(0);
 
         let monthIncome = 0;
         let monthExpense = 0;
@@ -875,7 +902,7 @@
           if (isNaN(d)) return;
 
           const isThisMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-          const isThisYear  = d.getFullYear() === currentYear;
+          const isThisYear  = d.getFullYear() === yearViewYear;
           const isToday     = d.getDate() === now.getDate() &&
                               d.getMonth() === now.getMonth() &&
                               d.getFullYear() === now.getFullYear();
@@ -886,12 +913,19 @@
           } else if (tx.type === 'expense') {
             if (isThisMonth) {
               monthExpense += tx.amount;
+
               if (categoryMonth[tx.category] !== undefined) {
                 categoryMonth[tx.category] += tx.amount;
               } else {
                 categoryMonth.Other += tx.amount;
               }
+
+              const dayIndex = d.getDate() - 1;
+              if (dayIndex >= 0 && dayIndex < daysInMonth) {
+                dailyTotals[dayIndex] += tx.amount;
+              }
             }
+
             if (isThisYear) {
               yearExpense += tx.amount;
               let cat = tx.category;
@@ -899,6 +933,7 @@
               categoryYear[cat] += tx.amount;
               monthlyTotals[d.getMonth()] += tx.amount;
             }
+
             if (isToday) {
               todayExpense += tx.amount;
             }
@@ -906,11 +941,11 @@
         });
 
         monthlyTotalsForChart = monthlyTotals.slice();
+        dailyTotalsForChart = dailyTotals.slice();
 
         const monthSaved = monthIncome - monthExpense;
         const yearSaved  = yearIncome  - yearExpense;
 
-        // month summary
         const mInc = document.getElementById('month-income');
         const mSp  = document.getElementById('month-spent');
         const mSa  = document.getElementById('month-saved');
@@ -918,7 +953,6 @@
         if (mSp)  mSp.textContent  = formatINR(Math.max(0, monthExpense));
         if (mSa)  mSa.textContent  = formatINR(monthSaved);
 
-        // year summary
         const yInc = document.getElementById('year-income');
         const ySp  = document.getElementById('year-spent');
         const ySa  = document.getElementById('year-saved');
@@ -926,13 +960,11 @@
         if (ySp)  ySp.textContent  = formatINR(Math.max(0, yearExpense));
         if (ySa)  ySa.textContent  = formatINR(yearSaved);
 
-        // home small cards
         const mSpHome   = document.getElementById('month-spent-home');
         const savedHome = document.getElementById('saved-home');
         if (mSpHome)   mSpHome.textContent   = formatINR(Math.max(0, monthExpense));
         if (savedHome) savedHome.textContent = formatINR(monthSaved);
 
-        // today's snapshot
         const spentTodayEl = document.getElementById('spent-today');
         const dailyMsgEl   = document.getElementById('daily-message');
 
@@ -948,7 +980,6 @@
           }
         }
 
-        // month category bars
         const totalCatMonth =
           categoryMonth.Food + categoryMonth.Shopping + categoryMonth.Transport +
           categoryMonth.Bills + categoryMonth.Other || 1;
@@ -966,7 +997,6 @@
         setCatBar('cat-bar-transport', 'cat-text-transport', categoryMonth.Transport);
         setCatBar('cat-bar-bills',     'cat-text-bills',     categoryMonth.Bills);
 
-        // budget bars
         function setBudgetBar(idBar, idText, spent, total) {
           const pct = total > 0 ? Math.min(100, (spent / total) * 100) : 0;
           const bar = document.getElementById(idBar);
@@ -979,7 +1009,6 @@
         setBudgetBar('bar-food',     'text-food',     categoryMonth.Food,  state.foodBudget);
         setBudgetBar('bar-shopping', 'text-shopping', categoryMonth.Shopping, state.shoppingBudget);
 
-        // yearly category bars
         const totalYearExpense = Object.values(categoryYear).reduce((a, b) => a + b, 0) || 1;
 
         function setYearCat(idBar, idText, amount) {
@@ -997,7 +1026,6 @@
         setYearCat('year-cat-subs',      'year-text-subs',      categoryYear.Subs);
         setYearCat('year-cat-other',     'year-text-other',     categoryYear.Other);
 
-        // highlights
         const highlightTopMonth  = document.getElementById('highlight-top-month');
         const highlightBestSav   = document.getElementById('highlight-best-savings');
         const highlightRatio     = document.getElementById('highlight-ratio');
@@ -1042,7 +1070,6 @@
             'Average monthly spending: ₹' + formatINR(Math.round(avg || 0));
         }
 
-        // prefill budget inputs
         const bOverall = document.getElementById('budget-overall-input');
         const bFood    = document.getElementById('budget-food-input');
         const bShop    = document.getElementById('budget-shopping-input');
@@ -1052,15 +1079,11 @@
 
         renderSubscriptions();
         renderTransactionList(currentMonth, currentYear);
+        updateDailyChart(daysInMonth);
+        updateYearChart();
 
-        // update chart if already created
-        if (yearlyChart) {
-          yearlyChart.data.datasets[0].data = monthlyTotalsForChart;
-          yearlyChart.update();
-        }
       }
 
-      // -------- Recent transactions list ----------
       function renderTransactionList(currentMonth, currentYear) {
         const list = document.getElementById('tx-list');
         const empty = document.getElementById('tx-list-empty');
@@ -1092,10 +1115,15 @@
           const d = new Date(tx.date);
           const dateLabel = isNaN(d) ? tx.date : d.toLocaleDateString('en-GB');
 
+          const descHtml = tx.description
+            ? `<span class="tx-meta">Note: ${tx.description}</span>`
+            : '';
+
           row.innerHTML = `
             <div class="tx-main">
               <span>${tx.category} (${tx.type})</span>
               <span class="tx-meta">${dateLabel}</span>
+              ${descHtml}
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="tx-amount ${tx.type}">
@@ -1115,11 +1143,168 @@
         });
       }
 
-      // -------- Forms ----------
+      function populateYearSelect(currentYear, yearViewYear) {
+        const select = document.getElementById('year-select');
+        if (!select) return;
+
+        const yearsSet = new Set();
+        const MIN_YEAR = 2025;
+
+        yearsSet.add(MIN_YEAR);
+
+        state.transactions.forEach(tx => {
+          const d = new Date(tx.date);
+          if (!isNaN(d)) {
+            yearsSet.add(d.getFullYear());
+          }
+        });
+
+        for (let y = MIN_YEAR; y <= currentYear; y++) {
+          yearsSet.add(y);
+        }
+
+        const years = Array.from(yearsSet).sort((a, b) => a - b);
+
+        const previousValue = select.value;
+        select.innerHTML = '';
+
+        years.forEach(y => {
+          const opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = y;
+          if (String(y) === String(yearViewYear)) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        if (!select._listenerAttached) {
+          select.addEventListener('change', () => {
+            selectedYearForYearView = Number(select.value);
+            recalcAndRender();
+          });
+          select._listenerAttached = true;
+        }
+
+        if (!previousValue) {
+          selectedYearForYearView = yearViewYear;
+        }
+      }
+
+      function updateDailyChart(daysInMonth) {
+        const canvas = document.getElementById('dailySpendingChart');
+        if (!canvas) return;
+
+        const labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+
+        if (!dailyChart) {
+          dailyChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Daily Spending (₹)',
+                data: dailyTotalsForChart,
+                backgroundColor: '#4a90e2',
+                borderRadius: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return '₹' + context.parsed.y.toLocaleString('en-IN');
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { display: false }
+                },
+                x: {
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        } else {
+          dailyChart.data.labels = labels;
+          dailyChart.data.datasets[0].data = dailyTotalsForChart;
+          dailyChart.update();
+        }
+      }
+
+      function updateYearChart() {
+        const canvas = document.getElementById('yearlySpendingChart');
+        if (!canvas) return;
+
+        const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        if (!yearlyChart) {
+          yearlyChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+              labels: MONTH_LABELS,
+              datasets: [{
+                label: 'Monthly Spending (₹)',
+                data: monthlyTotalsForChart,
+                backgroundColor: '#03A9F4',
+                borderRadius: 5
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      let label = context.dataset.label || '';
+                      if (label) label += ': ';
+                      if (context.parsed.y !== null) {
+                        label += new Intl.NumberFormat('en-IN', {
+                          style: 'currency',
+                          currency: 'INR'
+                        }).format(context.parsed.y);
+                      }
+                      return label;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { display: false },
+                  ticks: {
+                    callback: function (value) {
+                      return '₹' + (value / 1000) + 'k';
+                    }
+                  }
+                },
+                x: {
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+          canvas.classList.add('chart-initialized');
+        } else {
+          yearlyChart.data.datasets[0].data = monthlyTotalsForChart;
+          yearlyChart.update();
+        }
+      }
+
       function initTransactionForm() {
         const typeEl   = document.getElementById('tx-type');
         const amountEl = document.getElementById('tx-amount');
         const catEl    = document.getElementById('tx-category');
+        const descEl   = document.getElementById('tx-description');
         const dateEl   = document.getElementById('tx-date');
         const btn      = document.getElementById('tx-add-btn');
         const msg      = document.getElementById('tx-message');
@@ -1138,6 +1323,7 @@
           const type = typeEl.value;
           const amount = Number(amountEl.value);
           const category = catEl.value;
+          const description = (descEl.value || '').trim();
           const date = dateEl.value;
 
           if (!amount || amount <= 0 || !date) {
@@ -1145,10 +1331,11 @@
             return;
           }
 
-          addTransaction({ type, amount, category, date });
+          addTransaction({ type, amount, category, date, description });
 
           if (msg) msg.textContent = 'Saved ✅';
           amountEl.value = '';
+          descEl.value = '';
           setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
         });
       }
@@ -1233,67 +1420,9 @@
         });
       }
 
-      // -------- Yearly chart ----------
-      function initYearlyChart(canvas) {
-        const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-        yearlyChart = new Chart(canvas, {
-          type: 'bar',
-          data: {
-            labels: MONTH_LABELS,
-            datasets: [{
-              label: 'Monthly Spending (₹)',
-              data: monthlyTotalsForChart,
-              backgroundColor: '#03A9F4',
-              borderRadius: 5
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    let label = context.dataset.label || '';
-                    if (label) label += ': ';
-                    if (context.parsed.y !== null) {
-                      label += new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR'
-                      }).format(context.parsed.y);
-                    }
-                    return label;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: { display: false },
-                ticks: {
-                  callback: function (value) {
-                    return '₹' + (value / 1000) + 'k';
-                  }
-                }
-              },
-              x: {
-                grid: { display: false }
-              }
-            }
-          }
-        });
-
-        canvas.classList.add('chart-initialized');
-      }
-
-      // -------- Page init / tabs ----------
       document.addEventListener('DOMContentLoaded', () => {
         const tabs = document.querySelectorAll('.tab-button');
         const contents = document.querySelectorAll('.tab-content');
-        const yearlyChartCanvas = document.getElementById('yearlySpendingChart');
 
         function switchTab(targetTab) {
           tabs.forEach(tab => tab.classList.remove('active'));
@@ -1304,11 +1433,6 @@
 
           if (activeTabButton) activeTabButton.classList.add('active');
           if (activeContent)   activeContent.classList.remove('hidden');
-
-          if (targetTab === 'year' && yearlyChartCanvas &&
-              !yearlyChartCanvas.classList.contains('chart-initialized')) {
-            initYearlyChart(yearlyChartCanvas);
-          }
         }
 
         tabs.forEach(button => {
@@ -1324,18 +1448,25 @@
         });
 
         loadState();
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        selectedYearForYearView = currentYear;
+
         recalcAndRender();
+        populateYearSelect(currentYear, selectedYearForYearView);
         initTransactionForm();
         initBudgetForm();
         initSubscriptionForm();
       });
     </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .catch(err => console.log('SW registration failed', err));
-  }
-</script>
+
+    <!-- Service worker registration for PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .catch(err => console.log('SW registration failed', err));
+      }
+    </script>
 </body>
 </html>
-
