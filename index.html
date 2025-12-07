@@ -1,1472 +1,1725 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Money Buddy</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#f6d365">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --color-primary: #85FFBD;
-            --color-secondary: #FFFB7D;
-            --color-background-start: #f6d365;
-            --color-background-end: #fda085;
-            --color-text-dark: #333;
-            --color-text-light: #fff;
-            --color-card: #ffffff;
-            --radius-card: 22px;
-            --shadow-soft: 0 10px 20px rgba(0, 0, 0, 0.05), 0 6px 6px rgba(0, 0, 0, 0.03);
-            --shadow-hover: 0 15px 30px rgba(0, 0, 0, 0.1), 0 8px 8px rgba(0, 0, 0, 0.05);
-            --padding-content: 20px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Buddy</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f6d365">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --color-primary: #85FFBD;
+      --color-secondary: #FFFB7D;
+      --color-background-start: #f6d365;
+      --color-background-end: #fda085;
+      --color-text-dark: #333;
+      --color-text-light: #fff;
+      --color-card: #ffffff;
+      --radius-card: 22px;
+      --shadow-soft: 0 10px 20px rgba(0, 0, 0, 0.05), 0 6px 6px rgba(0, 0, 0, 0.03);
+      --shadow-hover: 0 15px 30px rgba(0, 0, 0, 0.1), 0 8px 8px rgba(0, 0, 0, 0.05);
+      --padding-content: 20px;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: var(--color-text-dark);
-            background: linear-gradient(135deg, var(--color-background-start) 0%, var(--color-background-end) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--color-text-dark);
+      background: linear-gradient(135deg, var(--color-background-start) 0%, var(--color-background-end) 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .app-container {
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            padding: var(--padding-content);
-            box-sizing: border-box;
-            flex-grow: 1;
-        }
+    .app-container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--padding-content);
+      box-sizing: border-box;
+      flex-grow: 1;
+    }
 
-        .title-bar {
-            background-color: var(--color-card);
-            box-shadow: var(--shadow-soft);
-            padding: 15px var(--padding-content);
-            text-align: center;
-            font-size: 1.8em;
-            font-weight: bold;
-            color: var(--color-text-dark);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+    .title-bar {
+      background-color: var(--color-card);
+      box-shadow: var(--shadow-soft);
+      padding: 15px var(--padding-content);
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      color: var(--color-text-dark);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-        .tab-navigation {
-            display: flex;
-            justify-content: space-around;
-            background-color: var(--color-card);
-            box-shadow: var(--shadow-soft);
-            border-radius: var(--radius-card);
-            margin-bottom: var(--padding-content);
-            padding: 10px 5px;
-        }
+    .tab-navigation {
+      display: flex;
+      justify-content: space-around;
+      background-color: var(--color-card);
+      box-shadow: var(--shadow-soft);
+      border-radius: var(--radius-card);
+      margin-bottom: var(--padding-content);
+      padding: 10px 5px;
+    }
 
-        .tab-button {
-            flex-grow: 1;
-            padding: 10px 15px;
-            border: none;
-            background-color: transparent;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            color: var(--color-text-dark);
-            border-radius: 15px;
-            transition: background-color 0.2s, color 0.2s, transform 0.1s;
-        }
+    .tab-button {
+      flex-grow: 1;
+      padding: 10px 15px;
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 600;
+      color: var(--color-text-dark);
+      border-radius: 15px;
+      transition: background-color 0.2s, color 0.2s, transform 0.1s;
+    }
 
-        .tab-button:hover:not(.active) {
-            background-color: #f0f0f0;
-        }
+    .tab-button:hover:not(.active) {
+      background-color: #f0f0f0;
+    }
 
-        .tab-button.active {
-            background: linear-gradient(45deg, var(--color-primary), #a6f5e8);
-            color: var(--color-text-dark);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+    .tab-button.active {
+      background: linear-gradient(45deg, var(--color-primary), #a6f5e8);
+      color: var(--color-text-dark);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        .card {
-            background-color: var(--color-card);
-            border-radius: var(--radius-card);
-            box-shadow: var(--shadow-soft);
-            padding: var(--padding-content);
-            margin-bottom: 15px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+    .card {
+      background-color: var(--color-card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+      padding: var(--padding-content);
+      margin-bottom: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
 
-        .card h3, .card h4 {
-            margin-top: 0;
-            font-weight: 600;
-        }
+    .card h3, .card h4 {
+      margin-top: 0;
+      font-weight: 600;
+    }
 
-        .home-stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
+    .home-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
 
-        .stat-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
+    .stat-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
 
-        .home-greeting {
-            background: linear-gradient(45deg, #a6f5e8, var(--color-primary));
-            padding: var(--padding-content);
-            border-radius: var(--radius-card);
-            margin-bottom: 15px;
-            color: var(--color-text-dark);
-            box-shadow: var(--shadow-soft);
-        }
+    .home-greeting {
+      background: linear-gradient(45deg, #a6f5e8, var(--color-primary));
+      padding: var(--padding-content);
+      border-radius: var(--radius-card);
+      margin-bottom: 15px;
+      color: var(--color-text-dark);
+      box-shadow: var(--shadow-soft);
+    }
 
-        .home-greeting h2 {
-            margin: 0 0 5px 0;
-            font-size: 1.5em;
-        }
+    .home-greeting h2 {
+      margin: 0 0 5px 0;
+      font-size: 1.5em;
+    }
 
-        .snapshot-card h4 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
+    .snapshot-card h4 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
 
-        .snapshot-data {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #4a90e2;
-            margin-bottom: 5px;
-        }
+    .snapshot-data {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #4a90e2;
+      margin-bottom: 5px;
+    }
 
-        .snapshot-message {
-            font-style: italic;
-            color: #666;
-            margin-top: 15px;
-        }
+    .snapshot-message {
+      font-style: italic;
+      color: #666;
+      margin-top: 15px;
+    }
 
-        .small-stat-card {
-            text-align: center;
-        }
+    .small-stat-card {
+      text-align: center;
+    }
 
-        .small-stat-card .amount {
-            font-size: 1.4em;
-            font-weight: bold;
-            margin-top: 5px;
-        }
+    .small-stat-card .amount {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-top: 5px;
+    }
 
-        .month-header {
-            font-size: 1.8em;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-        }
+    .month-header {
+      font-size: 1.8em;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        .stat-card {
-            text-align: center;
-        }
+    .stat-card {
+      text-align: center;
+    }
 
-        .stat-card .value {
-            font-size: 1.6em;
-            font-weight: bold;
-            margin: 5px 0;
-        }
+    .stat-card .value {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin: 5px 0;
+    }
 
-        #month-income-value { color: #4CAF50; }
-        #month-spent-value { color: #F44336; }
-        #month-saved-value { color: #2196F3; }
+    #month-income-value { color: #4CAF50; }
+    #month-spent-value { color: #F44336; }
+    #month-saved-value { color: #2196F3; }
 
-        .category-spend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+    .category-spend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
 
-        .category-info {
-            width: 120px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+    .category-info {
+      width: 120px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
 
-        .category-bar-container {
-            flex-grow: 1;
-            height: 20px;
-            background-color: #eee;
-            border-radius: 10px;
-            margin: 0 10px;
-            overflow: hidden;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+    .category-bar-container {
+      flex-grow: 1;
+      height: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      margin: 0 10px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-        .category-bar {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.6s ease-out;
-        }
+    .category-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s ease-out;
+    }
 
-        .category-percent {
-            font-weight: bold;
-            width: 60px;
-            text-align: right;
-            font-size: 0.85em;
-        }
+    .category-percent {
+      font-weight: bold;
+      width: 60px;
+      text-align: right;
+      font-size: 0.85em;
+    }
 
-        .bar-food { background-color: #FF9800; }
-        .bar-shopping { background-color: #9C27B0; }
-        .bar-transport { background-color: #03A9F4; }
-        .bar-bills { background-color: #4CAF50; }
+    .bar-food { background-color: #FF9800; }
+    .bar-shopping { background-color: #9C27B0; }
+    .bar-transport { background-color: #03A9F4; }
+    .bar-bills { background-color: #4CAF50; }
 
-        .progress-item {
-            margin-bottom: 15px;
-        }
+    .progress-item {
+      margin-bottom: 15px;
+    }
 
-        .progress-item label {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
+    .progress-item label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
 
-        .progress-bar-container {
-            height: 15px;
-            background-color: #eee;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+    .progress-bar-container {
+      height: 15px;
+      background-color: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-        .progress-bar {
-            height: 100%;
-            background-color: #a6f5e8;
-            transition: width 0.6s ease-out;
-            border-radius: 8px;
-        }
+    .progress-bar {
+      height: 100%;
+      background-color: #a6f5e8;
+      transition: width 0.6s ease-out;
+      border-radius: 8px;
+    }
 
-        .progress-bar-overall { background-color: #2196F3; }
-        .progress-bar-food { background-color: #FF9800; }
-        .progress-bar-shopping { background-color: #9C27B0; }
+    .progress-bar-overall { background-color: #2196F3; }
+    .progress-bar-food { background-color: #FF9800; }
+    .progress-bar-shopping { background-color: #9C27B0; }
 
-        .year-chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 15px;
-        }
+    .year-chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 15px;
+    }
 
-        .yearly-category-spend .category-bar-container {
-            background-color: #f0f0f0;
-        }
+    .yearly-category-spend .category-bar-container {
+      background-color: #f0f0f0;
+    }
 
-        .yearly-category-spend .category-bar {
-            background-color: #03A9F4;
-        }
+    .yearly-category-spend .category-bar {
+      background-color: #03A9F4;
+    }
 
-        .highlights ul {
-            list-style: none;
-            padding: 0;
-        }
+    .highlights ul {
+      list-style: none;
+      padding: 0;
+    }
 
-        .highlights li {
-            background-color: #f8f8f8;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border-left: 5px solid var(--color-background-end);
-        }
+    .highlights li {
+      background-color: #f8f8f8;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border-left: 5px solid var(--color-background-end);
+    }
 
-        .subscription-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+    .subscription-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-        .subscription-details {
-            display: flex;
-            flex-direction: column;
-        }
+    .subscription-details {
+      display: flex;
+      flex-direction: column;
+    }
 
-        .subscription-name {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
+    .subscription-name {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
 
-        .subscription-date {
-            font-size: 0.9em;
-            color: #666;
-        }
+    .subscription-date {
+      font-size: 0.9em;
+      color: #666;
+    }
 
-        .subscription-amount {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #F44336;
-        }
+    .subscription-amount {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #F44336;
+    }
 
-        .subscription-actions button {
-            border: none;
-            background: none;
-            color: #F44336;
-            cursor: pointer;
-            font-size: 0.85em;
-        }
+    .subscription-actions button {
+      border: none;
+      background: none;
+      color: #F44336;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
 
-        .form-row {
-            margin-bottom: 10px;
-        }
+    .form-row {
+      margin-bottom: 10px;
+    }
 
-        .form-row label {
-            font-size: 0.9em;
-            display: block;
-        }
+    .form-row label {
+      font-size: 0.9em;
+      display: block;
+    }
 
-        .form-row input,
-        .form-row select {
-            width: 100%;
-            padding: 6px 8px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-            margin-top: 4px;
-        }
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      margin-top: 4px;
+    }
 
-        #tx-add-btn,
-        #budget-save-btn,
-        #sub-add-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 999px;
-            border: none;
-            background: linear-gradient(45deg, var(--color-primary), #a6f5e8);
-            font-weight: 600;
-            cursor: pointer;
-        }
+    #tx-add-btn,
+    #budget-save-btn,
+    #sub-add-btn,
+    #auth-setup-btn,
+    #auth-login-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(45deg, var(--color-primary), #a6f5e8);
+      font-weight: 600;
+      cursor: pointer;
+    }
 
-        #tx-add-btn:hover,
-        #budget-save-btn:hover,
-        #sub-add-btn:hover {
-            box-shadow: var(--shadow-soft);
-        }
+    #tx-add-btn:hover,
+    #budget-save-btn:hover,
+    #sub-add-btn:hover,
+    #auth-setup-btn:hover,
+    #auth-login-btn:hover {
+      box-shadow: var(--shadow-soft);
+    }
 
-        .tx-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 0.9em;
-        }
-        .tx-row:last-child {
-            border-bottom: none;
-        }
-        .tx-main {
-            display: flex;
-            flex-direction: column;
-        }
-        .tx-meta {
-            font-size: 0.8em;
-            color: #777;
-        }
-        .tx-amount.expense {
-            color: #F44336;
-            font-weight: 600;
-        }
-        .tx-amount.income {
-            color: #4CAF50;
-            font-weight: 600;
-        }
-        .tx-delete-btn {
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 0.8em;
-            color: #F44336;
-        }
+    .tx-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9em;
+    }
+    .tx-row:last-child {
+      border-bottom: none;
+    }
+    .tx-main {
+      display: flex;
+      flex-direction: column;
+    }
+    .tx-meta {
+      font-size: 0.8em;
+      color: #777;
+    }
+    .tx-amount.expense {
+      color: #F44336;
+      font-weight: 600;
+    }
+    .tx-amount.income {
+      color: #4CAF50;
+      font-weight: 600;
+    }
+    .tx-delete-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 0.8em;
+      color: #F44336;
+    }
 
-        .hidden {
-            display: none;
-        }
+    .hidden {
+      display: none;
+    }
 
-        @media (max-width: 600px) {
-            .app-container {
-                padding: 10px;
-            }
+    /* 🔐 Login / Password overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--color-background-start), var(--color-background-end));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
 
-            .stat-cards-grid, .home-stats-grid {
-                grid-template-columns: 1fr;
-            }
+    .auth-card {
+      background: var(--color-card);
+      border-radius: 24px;
+      padding: 24px 20px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: var(--shadow-soft);
+      text-align: center;
+    }
 
-            .tab-navigation {
-                padding: 5px 0;
-                margin-top: 10px;
-                position: sticky;
-                bottom: 0;
-                border-radius: 20px 20px 0 0;
-                z-index: 10;
-            }
+    .auth-card h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
 
-            .tab-button {
-                padding: 8px 10px;
-                font-size: 0.9em;
-            }
+    .auth-card p {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      font-size: 0.9em;
+      color: #555;
+    }
 
-            .title-bar {
-                font-size: 1.5em;
-                padding: 10px;
-            }
-        }
-    </style>
+    .auth-msg {
+      font-size: 12px;
+      color: #F44336;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .app-container {
+        padding: 10px;
+      }
+
+      .stat-cards-grid, .home-stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-navigation {
+        padding: 5px 0;
+        margin-top: 10px;
+        position: sticky;
+        bottom: 0;
+        border-radius: 20px 20px 0 0;
+        z-index: 10;
+      }
+
+      .tab-button {
+        padding: 8px 10px;
+        font-size: 0.9em;
+      }
+
+      .title-bar {
+        font-size: 1.5em;
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="title-bar">
-        Money Buddy 💰
+  <!-- 🔐 Password / Login overlay -->
+  <div id="auth-overlay" class="auth-overlay">
+    <!-- First-time setup card -->
+    <div class="auth-card" id="auth-setup-card">
+      <h2>Set your password 🔐</h2>
+      <p>You’ll use this to unlock Money Buddy on this device.</p>
+      <div class="form-row">
+        <label>
+          Password
+          <input type="password" id="auth-setup-pass">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>
+          Confirm password
+          <input type="password" id="auth-setup-pass2">
+        </label>
+      </div>
+      <button id="auth-setup-btn">Save password</button>
+      <p id="auth-setup-msg" class="auth-msg"></p>
     </div>
 
-    <div class="app-container">
-        <div class="tab-navigation">
-            <button class="tab-button active" data-tab="home">🏠 Home</button>
-            <button class="tab-button" data-tab="month">🗓️ Month</button>
-            <button class="tab-button" data-tab="year">📈 Year</button>
-            <button class="tab-button" data-tab="subscriptions">🔗 Subs</button>
+    <!-- Normal login card -->
+    <div class="auth-card hidden" id="auth-login-card">
+      <h2>Unlock Money Buddy 🔓</h2>
+      <p>Enter your password to continue.</p>
+      <div class="form-row">
+        <label>
+          Password
+          <input type="password" id="auth-login-pass">
+        </label>
+      </div>
+      <button id="auth-login-btn">Unlock</button>
+      <p id="auth-login-msg" class="auth-msg"></p>
+    </div>
+  </div>
+
+  <div class="title-bar">
+    Money Buddy 💰
+  </div>
+
+  <div class="app-container">
+    <div class="tab-navigation">
+      <button class="tab-button active" data-tab="home">🏠 Home</button>
+      <button class="tab-button" data-tab="month">🗓️ Month</button>
+      <button class="tab-button" data-tab="year">📈 Year</button>
+      <button class="tab-button" data-tab="subscriptions">🔗 Subs</button>
+    </div>
+
+    <!-- HOME TAB -->
+    <section id="home" class="tab-content">
+      <div class="home-greeting">
+        <h2>Hi 👋</h2>
+        <p>Your Money Buddy</p>
+      </div>
+
+      <div class="card snapshot-card">
+        <h4>Today's Snapshot ☀️</h4>
+        <p>Spent today:</p>
+        <div class="snapshot-data" id="spent-today">₹0</div>
+        <p class="snapshot-message" id="daily-message">No spending recorded yet today ✨</p>
+      </div>
+
+      <div class="home-stats-grid">
+        <div class="card small-stat-card">
+          <p>This month spent 💸</p>
+          <div class="amount">₹<span id="month-spent-home">0</span></div>
         </div>
+        <div class="card small-stat-card">
+          <p>Saved so far 🏦</p>
+          <div class="amount">₹<span id="saved-home">0</span></div>
+        </div>
+      </div>
 
-        <!-- HOME TAB -->
-        <section id="home" class="tab-content">
-            <div class="home-greeting">
-                <h2>Hi 👋</h2>
-                <p>Your Money Buddy</p>
+      <div class="card">
+        <h3>This month – daily spending 📅</h3>
+        <div class="year-chart-container" style="height:220px;">
+          <canvas id="dailySpendingChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form -->
+      <div class="card">
+        <h3>Add transaction ✍️</h3>
+        <div class="form-row">
+          <label>
+            Type:
+            <select id="tx-type">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Amount (₹):
+            <input id="tx-amount" type="number" min="1" />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Category:
+            <select id="tx-category">
+              <option value="Food">Food</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Transport">Transport</option>
+              <option value="Bills">Bills</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Description (optional):
+            <input id="tx-description" type="text" placeholder="Breakfast with friends, cab to airport, etc.">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Date:
+            <input id="tx-date" type="date" />
+          </label>
+        </div>
+        <button id="tx-add-btn">Save transaction</button>
+        <p id="tx-message" style="font-size: 12px; margin-top: 4px;"></p>
+      </div>
+
+      <!-- Recent transactions -->
+      <div class="card">
+        <h3>Recent transactions (this month) 🧾</h3>
+        <div id="tx-list-empty" style="font-size:0.9em;color:#666;">
+          No transactions yet. Add one above.
+        </div>
+        <div id="tx-list"></div>
+      </div>
+    </section>
+
+    <!-- MONTH TAB -->
+    <section id="month" class="tab-content hidden">
+      <h2 class="month-header">This Month</h2>
+
+      <div class="stat-cards-grid">
+        <div class="card stat-card">
+          <p>Income 💵</p>
+          <div class="value" id="month-income-value">₹<span id="month-income">0</span></div>
+        </div>
+        <div class="card stat-card">
+          <p>Spent 📉</p>
+          <div class="value" id="month-spent-value">₹<span id="month-spent">0</span></div>
+        </div>
+        <div class="card stat-card">
+          <p>Saved ✨</p>
+          <div class="value" id="month-saved-value">₹<span id="month-saved">0</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Category Spend 📊</h3>
+        <div id="category-spend-list">
+          <div class="category-spend-item">
+            <div class="category-info">🍔 Food</div>
+            <div class="category-bar-container">
+              <div class="category-bar bar-food" id="cat-bar-food" style="width: 0%;"></div>
             </div>
-
-            <div class="card snapshot-card">
-                <h4>Today's Snapshot ☀️</h4>
-                <p>Spent today:</p>
-                <div class="snapshot-data" id="spent-today">₹0</div>
-                <p class="snapshot-message" id="daily-message">No spending recorded yet today ✨</p>
+            <div class="category-percent" id="cat-text-food">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🛒 Shopping</div>
+            <div class="category-bar-container">
+              <div class="category-bar bar-shopping" id="cat-bar-shopping" style="width: 0%;"></div>
             </div>
-
-            <div class="home-stats-grid">
-                <div class="card small-stat-card">
-                    <p>This month spent 💸</p>
-                    <div class="amount">₹<span id="month-spent-home">0</span></div>
-                </div>
-                <div class="card small-stat-card">
-                    <p>Saved so far 🏦</p>
-                    <div class="amount">₹<span id="saved-home">0</span></div>
-                </div>
+            <div class="category-percent" id="cat-text-shopping">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🚕 Transport</div>
+            <div class="category-bar-container">
+              <div class="category-bar bar-transport" id="cat-bar-transport" style="width: 0%;"></div>
             </div>
-
-            <div class="card">
-                <h3>This month – daily spending 📅</h3>
-                <div class="year-chart-container" style="height:220px;">
-                    <canvas id="dailySpendingChart"></canvas>
-                </div>
+            <div class="category-percent" id="cat-text-transport">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">📄 Bills</div>
+            <div class="category-bar-container">
+              <div class="category-bar bar-bills" id="cat-bar-bills" style="width: 0%;"></div>
             </div>
+            <div class="category-percent" id="cat-text-bills">₹0</div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Add Transaction Form -->
-            <div class="card">
-                <h3>Add transaction ✍️</h3>
-                <div class="form-row">
-                    <label>
-                        Type:
-                        <select id="tx-type">
-                            <option value="expense">Expense</option>
-                            <option value="income">Income</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Amount (₹):
-                        <input id="tx-amount" type="number" min="1" />
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Category:
-                        <select id="tx-category">
-                            <option value="Food">Food</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Transport">Transport</option>
-                            <option value="Bills">Bills</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Description (optional):
-                        <input id="tx-description" type="text" placeholder="Breakfast with friends, cab to airport, etc.">
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Date:
-                        <input id="tx-date" type="date" />
-                    </label>
-                </div>
-                <button id="tx-add-btn">Save transaction</button>
-                <p id="tx-message" style="font-size: 12px; margin-top: 4px;"></p>
+      <!-- Editable Budgets -->
+      <div class="card">
+        <h3>Set your budgets ⚙️</h3>
+        <div class="form-row">
+          <label>
+            Overall monthly budget (₹)
+            <input id="budget-overall-input" type="number" min="0">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Food budget (₹)
+            <input id="budget-food-input" type="number" min="0">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Shopping budget (₹)
+            <input id="budget-shopping-input" type="number" min="0">
+          </label>
+        </div>
+        <button id="budget-save-btn">Save budgets</button>
+        <p id="budget-message" style="font-size: 12px; margin-top: 4px;"></p>
+      </div>
+
+      <div class="card">
+        <h3>Budget Progress 🎯</h3>
+        <div id="budget-progress-list">
+          <div class="progress-item">
+            <label>Overall Budget</label>
+            <div class="progress-bar-container">
+              <div class="progress-bar progress-bar-overall" id="bar-overall" style="width: 0%;"></div>
             </div>
-
-            <!-- Recent transactions -->
-            <div class="card">
-                <h3>Recent transactions (this month) 🧾</h3>
-                <div id="tx-list-empty" style="font-size:0.9em;color:#666;">
-                    No transactions yet. Add one above.
-                </div>
-                <div id="tx-list"></div>
+            <label id="text-overall">₹0 / ₹0 (0%)</label>
+          </div>
+          <div class="progress-item">
+            <label>🍔 Food Budget</label>
+            <div class="progress-bar-container">
+              <div class="progress-bar progress-bar-food" id="bar-food" style="width: 0%;"></div>
             </div>
-        </section>
-
-        <!-- MONTH TAB -->
-        <section id="month" class="tab-content hidden">
-            <h2 class="month-header">This Month</h2>
-
-            <div class="stat-cards-grid">
-                <div class="card stat-card">
-                    <p>Income 💵</p>
-                    <div class="value" id="month-income-value">₹<span id="month-income">0</span></div>
-                </div>
-                <div class="card stat-card">
-                    <p>Spent 📉</p>
-                    <div class="value" id="month-spent-value">₹<span id="month-spent">0</span></div>
-                </div>
-                <div class="card stat-card">
-                    <p>Saved ✨</p>
-                    <div class="value" id="month-saved-value">₹<span id="month-saved">0</span></div>
-                </div>
+            <label id="text-food">₹0 / ₹0 (0%)</label>
+          </div>
+          <div class="progress-item">
+            <label>🛒 Shopping Budget</label>
+            <div class="progress-bar-container">
+              <div class="progress-bar progress-bar-shopping" id="bar-shopping" style="width: 0%;"></div>
             </div>
+            <label id="text-shopping">₹0 / ₹0 (0%)</label>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            <div class="card">
-                <h3>Category Spend 📊</h3>
-                <div id="category-spend-list">
-                    <div class="category-spend-item">
-                        <div class="category-info">🍔 Food</div>
-                        <div class="category-bar-container">
-                            <div class="category-bar bar-food" id="cat-bar-food" style="width: 0%;"></div>
-                        </div>
-                        <div class="category-percent" id="cat-text-food">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🛒 Shopping</div>
-                        <div class="category-bar-container">
-                            <div class="category-bar bar-shopping" id="cat-bar-shopping" style="width: 0%;"></div>
-                        </div>
-                        <div class="category-percent" id="cat-text-shopping">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🚕 Transport</div>
-                        <div class="category-bar-container">
-                            <div class="category-bar bar-transport" id="cat-bar-transport" style="width: 0%;"></div>
-                        </div>
-                        <div class="category-percent" id="cat-text-transport">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">📄 Bills</div>
-                        <div class="category-bar-container">
-                            <div class="category-bar bar-bills" id="cat-bar-bills" style="width: 0%;"></div>
-                        </div>
-                        <div class="category-percent" id="cat-text-bills">₹0</div>
-                    </div>
-                </div>
-            </div>
+    <!-- YEAR TAB -->
+    <section id="year" class="tab-content hidden">
+      <h2 class="month-header">
+        <span id="year-header">Year</span>
+      </h2>
+      <div style="text-align:center; margin-bottom:10px;">
+        <label for="year-select" style="font-size:0.85em; margin-right:4px;">View year:</label>
+        <select id="year-select" style="padding:6px 10px;border-radius:999px;border:1px solid #ddd;">
+        </select>
+      </div>
 
-            <!-- Editable Budgets -->
-            <div class="card">
-                <h3>Set your budgets ⚙️</h3>
-                <div class="form-row">
-                    <label>
-                        Overall monthly budget (₹)
-                        <input id="budget-overall-input" type="number" min="0">
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Food budget (₹)
-                        <input id="budget-food-input" type="number" min="0">
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Shopping budget (₹)
-                        <input id="budget-shopping-input" type="number" min="0">
-                    </label>
-                </div>
-                <button id="budget-save-btn">Save budgets</button>
-                <p id="budget-message" style="font-size: 12px; margin-top: 4px;"></p>
-            </div>
+      <div class="stat-cards-grid">
+        <div class="card stat-card">
+          <p>Total Income 🥳</p>
+          <div class="value" style="color: #4CAF50;">₹<span id="year-income">0</span></div>
+        </div>
+        <div class="card stat-card">
+          <p>Total Spent 💔</p>
+          <div class="value" style="color: #F44336;">₹<span id="year-spent">0</span></div>
+        </div>
+        <div class="card stat-card">
+          <p>Total Savings 💎</p>
+          <div class="value" style="color: #2196F3;">₹<span id="year-saved">0</span></div>
+        </div>
+      </div>
 
-            <div class="card">
-                <h3>Budget Progress 🎯</h3>
-                <div id="budget-progress-list">
-                    <div class="progress-item">
-                        <label>Overall Budget</label>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar progress-bar-overall" id="bar-overall" style="width: 0%;"></div>
-                        </div>
-                        <label id="text-overall">₹0 / ₹0 (0%)</label>
-                    </div>
-                    <div class="progress-item">
-                        <label>🍔 Food Budget</label>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar progress-bar-food" id="bar-food" style="width: 0%;"></div>
-                        </div>
-                        <label id="text-food">₹0 / ₹0 (0%)</label>
-                    </div>
-                    <div class="progress-item">
-                        <label>🛒 Shopping Budget</label>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar progress-bar-shopping" id="bar-shopping" style="width: 0%;"></div>
-                        </div>
-                        <label id="text-shopping">₹0 / ₹0 (0%)</label>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <div class="card">
+        <h3>Monthly Spending Trend</h3>
+        <div class="year-chart-container">
+          <canvas id="yearlySpendingChart"></canvas>
+        </div>
+      </div>
 
-        <!-- YEAR TAB -->
-        <section id="year" class="tab-content hidden">
-            <h2 class="month-header">
-                <span id="year-header">Year</span>
-            </h2>
-            <div style="text-align:center; margin-bottom:10px;">
-                <label for="year-select" style="font-size:0.85em; margin-right:4px;">View year:</label>
-                <select id="year-select" style="padding:6px 10px;border-radius:999px;border:1px solid #ddd;">
-                </select>
-            </div>
+      <div class="card">
+        <h3>Monthly Income Trend</h3>
+        <div class="year-chart-container">
+          <canvas id="yearlyIncomeChart"></canvas>
+        </div>
+      </div>
 
-            <div class="stat-cards-grid">
-                <div class="card stat-card">
-                    <p>Total Income 🥳</p>
-                    <div class="value" style="color: #4CAF50;">₹<span id="year-income">0</span></div>
-                </div>
-                <div class="card stat-card">
-                    <p>Total Spent 💔</p>
-                    <div class="value" style="color: #F44336;">₹<span id="year-spent">0</span></div>
-                </div>
-                <div class="card stat-card">
-                    <p>Total Savings 💎</p>
-                    <div class="value" style="color: #2196F3;">₹<span id="year-saved">0</span></div>
-                </div>
-            </div>
+      <div class="card yearly-category-spend">
+        <h3>Yearly Category Spend</h3>
+        <div id="yearly-category-list">
+          <div class="category-spend-item">
+            <div class="category-info">🍔 Food</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-food" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-food">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">📄 Bills</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-bills" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-bills">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🛒 Shopping</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-shopping" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-shopping">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🚕 Transport</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-transport" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-transport">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🔗 Subscriptions</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-subs" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-subs">₹0</div>
+          </div>
+          <div class="category-spend-item">
+            <div class="category-info">🤷 Others</div>
+            <div class="category-bar-container"><div class="category-bar" id="year-cat-other" style="width: 0%;"></div></div>
+            <div class="category-percent" id="year-text-other">₹0</div>
+          </div>
+        </div>
+      </div>
 
-            <div class="card">
-                <h3>Monthly Spending Trend</h3>
-                <div class="year-chart-container">
-                    <canvas id="yearlySpendingChart"></canvas>
-                </div>
-            </div>
+      <div class="card highlights">
+        <h3>Highlights ✨</h3>
+        <ul>
+          <li id="highlight-top-month">Highest spending month: –</li>
+          <li id="highlight-best-savings">Best savings month: –</li>
+          <li id="highlight-ratio">Food + Bills share of yearly spending: –</li>
+          <li id="highlight-avg">Average monthly spending: –</li>
+        </ul>
+      </div>
+    </section>
 
-            <div class="card yearly-category-spend">
-                <h3>Yearly Category Spend</h3>
-                <div id="yearly-category-list">
-                    <div class="category-spend-item">
-                        <div class="category-info">🍔 Food</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-food" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-food">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">📄 Bills</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-bills" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-bills">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🛒 Shopping</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-shopping" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-shopping">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🚕 Transport</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-transport" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-transport">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🔗 Subscriptions</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-subs" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-subs">₹0</div>
-                    </div>
-                    <div class="category-spend-item">
-                        <div class="category-info">🤷 Others</div>
-                        <div class="category-bar-container"><div class="category-bar" id="year-cat-other" style="width: 0%;"></div></div>
-                        <div class="category-percent" id="year-text-other">₹0</div>
-                    </div>
-                </div>
-            </div>
+    <!-- SUBSCRIPTIONS TAB -->
+    <section id="subscriptions" class="tab-content hidden">
+      <h2 class="month-header">Subscriptions 🛎️</h2>
 
-            <div class="card highlights">
-                <h3>Highlights ✨</h3>
-                <ul>
-                    <li id="highlight-top-month">Highest spending month: –</li>
-                    <li id="highlight-best-savings">Best savings month: –</li>
-                    <li id="highlight-ratio">Food + Bills share of yearly spending: –</li>
-                    <li id="highlight-avg">Average monthly spending: –</li>
-                </ul>
-            </div>
-        </section>
+      <div class="card">
+        <h3>Add subscription ➕</h3>
+        <div class="form-row">
+          <label>
+            Name
+            <input id="sub-name" type="text" placeholder="Netflix, Spotify, etc.">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Amount per cycle (₹)
+            <input id="sub-amount" type="number" min="0">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Billing cycle
+            <select id="sub-cycle">
+              <option value="month">Monthly</option>
+              <option value="year">Yearly</option>
+              <option value="quarter">Quarterly</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Next renewal date
+            <input id="sub-date" type="date">
+          </label>
+        </div>
+        <button id="sub-add-btn">Save subscription</button>
+        <p id="sub-message" style="font-size: 12px; margin-top: 4px;"></p>
+      </div>
 
-        <!-- SUBSCRIPTIONS TAB -->
-        <section id="subscriptions" class="tab-content hidden">
-            <h2 class="month-header">Subscriptions 🛎️</h2>
+      <div class="card">
+        <h3>Upcoming Subscriptions</h3>
+        <div id="subscriptions-list">
+          <p style="font-size: 0.9em; color: #666;">No subscriptions yet. Add one above.</p>
+        </div>
+      </div>
+    </section>
+  </div>
 
-            <div class="card">
-                <h3>Add subscription ➕</h3>
-                <div class="form-row">
-                    <label>
-                        Name
-                        <input id="sub-name" type="text" placeholder="Netflix, Spotify, etc.">
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Amount per cycle (₹)
-                        <input id="sub-amount" type="number" min="0">
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Billing cycle
-                        <select id="sub-cycle">
-                            <option value="month">Monthly</option>
-                            <option value="year">Yearly</option>
-                            <option value="quarter">Quarterly</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="form-row">
-                    <label>
-                        Next renewal date
-                        <input id="sub-date" type="date">
-                    </label>
-                </div>
-                <button id="sub-add-btn">Save subscription</button>
-                <p id="sub-message" style="font-size: 12px; margin-top: 4px;"></p>
-            </div>
+  <script>
+    const STORAGE_KEY = 'moneyBuddyData_v2';
+    const PASSWORD_KEY = 'moneyBuddyPassword';
+    const LOCK_TIME_KEY = 'moneyBuddyLastUnlock';
 
-            <div class="card">
-                <h3>Upcoming Subscriptions</h3>
-                <div id="subscriptions-list">
-                    <p style="font-size: 0.9em; color: #666;">No subscriptions yet. Add one above.</p>
-                </div>
-            </div>
-        </section>
-    </div>
+    let state = {
+      transactions: [],
+      monthlyBudget: 44000,
+      foodBudget: 15000,
+      shoppingBudget: 10000,
+      subscriptions: []
+    };
 
-    <script>
-      const STORAGE_KEY = 'moneyBuddyData_v2';
+    let yearlyChart = null;
+    let monthlyTotalsForChart = Array(12).fill(0);   // expenses
 
-      let state = {
-        transactions: [],
-        monthlyBudget: 44000,
-        foodBudget: 15000,
-        shoppingBudget: 10000,
-        subscriptions: []
-      };
+    let yearlyIncomeChart = null;
+    let monthlyIncomeForChart = Array(12).fill(0);   // income
 
-      let yearlyChart = null;
-      let monthlyTotalsForChart = Array(12).fill(0);
-      let dailyChart = null;
-      let dailyTotalsForChart = [];
-      let selectedYearForYearView = null; // null = current year
+    let dailyChart = null;
+    let dailyTotalsForChart = [];
+    let selectedYearForYearView = null; // null = current year
+    let isUnlocked = false;
 
-      function loadState() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.transactions)) {
-              state = Object.assign({}, state, parsed);
-            }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.transactions)) {
+            state = Object.assign({}, state, parsed);
           }
-        } catch (e) {
-          console.warn('Could not load state', e);
         }
+      } catch (e) {
+        console.warn('Could not load state', e);
       }
+    }
 
-      function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-      function formatINR(amount) {
-        return amount.toLocaleString('en-IN');
-      }
+    function formatINR(amount) {
+      return amount.toLocaleString('en-IN');
+    }
 
-      function addTransaction(tx) {
-        state.transactions.push(tx);
+    function addTransaction(tx) {
+      state.transactions.push(tx);
+      saveState();
+      recalcAndRender();
+    }
+
+    function deleteTransaction(index) {
+      if (index >= 0 && index < state.transactions.length) {
+        state.transactions.splice(index, 1);
         saveState();
         recalcAndRender();
       }
+    }
 
-      function deleteTransaction(index) {
-        if (index >= 0 && index < state.transactions.length) {
-          state.transactions.splice(index, 1);
-          saveState();
-          recalcAndRender();
-        }
+    function deleteSubscription(id) {
+      state.subscriptions = state.subscriptions.filter(s => s.id !== id);
+      saveState();
+      renderSubscriptions();
+    }
+
+    function renderSubscriptions() {
+      const container = document.getElementById('subscriptions-list');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      if (!state.subscriptions.length) {
+        container.innerHTML = '<p style="font-size:0.9em;color:#666;">No subscriptions yet. Add one above.</p>';
+        return;
       }
 
-      function deleteSubscription(id) {
-        state.subscriptions = state.subscriptions.filter(s => s.id !== id);
-        saveState();
-        renderSubscriptions();
-      }
-
-      function renderSubscriptions() {
-        const container = document.getElementById('subscriptions-list');
-        if (!container) return;
-
-        container.innerHTML = '';
-
-        if (!state.subscriptions.length) {
-          container.innerHTML = '<p style="font-size:0.9em;color:#666;">No subscriptions yet. Add one above.</p>';
-          return;
-        }
-
-        state.subscriptions
-          .sort((a, b) => new Date(a.nextDate || '2100-01-01') - new Date(b.nextDate || '2100-01-01'))
-          .forEach(sub => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'subscription-item';
-            wrapper.innerHTML = `
-              <div class="subscription-details">
-                <div class="subscription-name">${sub.name}</div>
-                <div class="subscription-date">Next Renewal: ${sub.nextDate || '-'}</div>
-              </div>
-              <div style="text-align:right;">
-                <div class="subscription-amount">₹${formatINR(sub.amount)} / ${sub.cycle}</div>
-                <div class="subscription-actions">
-                  <button data-id="${sub.id}">Delete</button>
-                </div>
-              </div>
-            `;
-            container.appendChild(wrapper);
-          });
-
-        container.querySelectorAll('button[data-id]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-id');
-            deleteSubscription(id);
-          });
-        });
-      }
-
-      function recalcAndRender() {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        const yearViewYear = selectedYearForYearView || currentYear;
-
-        const yearHeader = document.getElementById('year-header');
-        if (yearHeader) {
-          yearHeader.textContent = 'Year ' + yearViewYear;
-        }
-
-        const daysInMonth  = new Date(currentYear, currentMonth + 1, 0).getDate();
-        const dailyTotals  = Array(daysInMonth).fill(0);
-
-        let monthIncome = 0;
-        let monthExpense = 0;
-        let yearIncome = 0;
-        let yearExpense = 0;
-        let todayExpense = 0;
-
-        const categoryMonth = {
-          Food: 0,
-          Shopping: 0,
-          Transport: 0,
-          Bills: 0,
-          Other: 0
-        };
-
-        const categoryYear = {
-          Food: 0,
-          Shopping: 0,
-          Transport: 0,
-          Bills: 0,
-          Subs: 0,
-          Other: 0
-        };
-
-        const monthlyTotals = Array(12).fill(0);
-
-        state.transactions.forEach((tx, idx) => {
-          const d = new Date(tx.date);
-          if (isNaN(d)) return;
-
-          const isThisMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-          const isThisYear  = d.getFullYear() === yearViewYear;
-          const isToday     = d.getDate() === now.getDate() &&
-                              d.getMonth() === now.getMonth() &&
-                              d.getFullYear() === now.getFullYear();
-
-          if (tx.type === 'income') {
-            if (isThisMonth) monthIncome += tx.amount;
-            if (isThisYear)  yearIncome  += tx.amount;
-          } else if (tx.type === 'expense') {
-            if (isThisMonth) {
-              monthExpense += tx.amount;
-
-              if (categoryMonth[tx.category] !== undefined) {
-                categoryMonth[tx.category] += tx.amount;
-              } else {
-                categoryMonth.Other += tx.amount;
-              }
-
-              const dayIndex = d.getDate() - 1;
-              if (dayIndex >= 0 && dayIndex < daysInMonth) {
-                dailyTotals[dayIndex] += tx.amount;
-              }
-            }
-
-            if (isThisYear) {
-              yearExpense += tx.amount;
-              let cat = tx.category;
-              if (!['Food','Shopping','Transport','Bills','Subs'].includes(cat)) cat = 'Other';
-              categoryYear[cat] += tx.amount;
-              monthlyTotals[d.getMonth()] += tx.amount;
-            }
-
-            if (isToday) {
-              todayExpense += tx.amount;
-            }
-          }
-        });
-
-        monthlyTotalsForChart = monthlyTotals.slice();
-        dailyTotalsForChart = dailyTotals.slice();
-
-        const monthSaved = monthIncome - monthExpense;
-        const yearSaved  = yearIncome  - yearExpense;
-
-        const mInc = document.getElementById('month-income');
-        const mSp  = document.getElementById('month-spent');
-        const mSa  = document.getElementById('month-saved');
-        if (mInc) mInc.textContent = formatINR(Math.max(0, monthIncome));
-        if (mSp)  mSp.textContent  = formatINR(Math.max(0, monthExpense));
-        if (mSa)  mSa.textContent  = formatINR(monthSaved);
-
-        const yInc = document.getElementById('year-income');
-        const ySp  = document.getElementById('year-spent');
-        const ySa  = document.getElementById('year-saved');
-        if (yInc) yInc.textContent = formatINR(Math.max(0, yearIncome));
-        if (ySp)  ySp.textContent  = formatINR(Math.max(0, yearExpense));
-        if (ySa)  ySa.textContent  = formatINR(yearSaved);
-
-        const mSpHome   = document.getElementById('month-spent-home');
-        const savedHome = document.getElementById('saved-home');
-        if (mSpHome)   mSpHome.textContent   = formatINR(Math.max(0, monthExpense));
-        if (savedHome) savedHome.textContent = formatINR(monthSaved);
-
-        const spentTodayEl = document.getElementById('spent-today');
-        const dailyMsgEl   = document.getElementById('daily-message');
-
-        if (spentTodayEl) spentTodayEl.textContent = '₹' + formatINR(todayExpense);
-
-        if (dailyMsgEl) {
-          if (todayExpense === 0 && monthExpense === 0 && monthIncome === 0) {
-            dailyMsgEl.textContent = 'No spending recorded yet today ✨';
-          } else if (todayExpense === 0) {
-            dailyMsgEl.textContent = 'Nothing spent yet today. Nice control 💪';
-          } else {
-            dailyMsgEl.textContent = 'Nice, today\'s spending is logged 🧾';
-          }
-        }
-
-        const totalCatMonth =
-          categoryMonth.Food + categoryMonth.Shopping + categoryMonth.Transport +
-          categoryMonth.Bills + categoryMonth.Other || 1;
-
-        function setCatBar(idBar, idText, amount) {
-          const bar = document.getElementById(idBar);
-          const txt = document.getElementById(idText);
-          const pct = (amount / totalCatMonth) * 100;
-          if (bar) bar.style.width = pct + '%';
-          if (txt) txt.textContent = '₹' + formatINR(amount);
-        }
-
-        setCatBar('cat-bar-food',      'cat-text-food',      categoryMonth.Food);
-        setCatBar('cat-bar-shopping',  'cat-text-shopping',  categoryMonth.Shopping);
-        setCatBar('cat-bar-transport', 'cat-text-transport', categoryMonth.Transport);
-        setCatBar('cat-bar-bills',     'cat-text-bills',     categoryMonth.Bills);
-
-        function setBudgetBar(idBar, idText, spent, total) {
-          const pct = total > 0 ? Math.min(100, (spent / total) * 100) : 0;
-          const bar = document.getElementById(idBar);
-          const txt = document.getElementById(idText);
-          if (bar) bar.style.width = pct + '%';
-          if (txt) txt.textContent = `₹${formatINR(spent)} / ₹${formatINR(total)} (${Math.round(pct)}%)`;
-        }
-
-        setBudgetBar('bar-overall',  'text-overall',  monthExpense,        state.monthlyBudget);
-        setBudgetBar('bar-food',     'text-food',     categoryMonth.Food,  state.foodBudget);
-        setBudgetBar('bar-shopping', 'text-shopping', categoryMonth.Shopping, state.shoppingBudget);
-
-        const totalYearExpense = Object.values(categoryYear).reduce((a, b) => a + b, 0) || 1;
-
-        function setYearCat(idBar, idText, amount) {
-          const bar = document.getElementById(idBar);
-          const txt = document.getElementById(idText);
-          const pct = (amount / totalYearExpense) * 100;
-          if (bar) bar.style.width = pct + '%';
-          if (txt) txt.textContent = '₹' + formatINR(amount);
-        }
-
-        setYearCat('year-cat-food',      'year-text-food',      categoryYear.Food);
-        setYearCat('year-cat-bills',     'year-text-bills',     categoryYear.Bills);
-        setYearCat('year-cat-shopping',  'year-text-shopping',  categoryYear.Shopping);
-        setYearCat('year-cat-transport', 'year-text-transport', categoryYear.Transport);
-        setYearCat('year-cat-subs',      'year-text-subs',      categoryYear.Subs);
-        setYearCat('year-cat-other',     'year-text-other',     categoryYear.Other);
-
-        const highlightTopMonth  = document.getElementById('highlight-top-month');
-        const highlightBestSav   = document.getElementById('highlight-best-savings');
-        const highlightRatio     = document.getElementById('highlight-ratio');
-        const highlightAvg       = document.getElementById('highlight-avg');
-
-        let maxSpend = 0;
-        let maxSpendMonthIndex = -1;
-        monthlyTotals.forEach((amt, idx) => {
-          if (amt > maxSpend) {
-            maxSpend = amt;
-            maxSpendMonthIndex = idx;
-          }
-        });
-
-        const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-        if (highlightTopMonth) {
-          if (maxSpendMonthIndex >= 0) {
-            highlightTopMonth.textContent =
-              'Highest spending month: ' + MONTH_LABELS[maxSpendMonthIndex] +
-              ' (₹' + formatINR(maxSpend) + ')';
-          } else {
-            highlightTopMonth.textContent = 'Highest spending month: –';
-          }
-        }
-
-        if (highlightBestSav) {
-          highlightBestSav.textContent =
-            'Best savings month: (we can wire this later when we track income per month) 😊';
-        }
-
-        if (highlightRatio) {
-          const fb = categoryYear.Food + categoryYear.Bills;
-          const ratio = (fb / totalYearExpense) * 100;
-          highlightRatio.textContent =
-            'Food + Bills share of yearly spending: ' + Math.round(ratio) + '%';
-        }
-
-        if (highlightAvg) {
-          const avg = yearExpense / 12;
-          highlightAvg.textContent =
-            'Average monthly spending: ₹' + formatINR(Math.round(avg || 0));
-        }
-
-        const bOverall = document.getElementById('budget-overall-input');
-        const bFood    = document.getElementById('budget-food-input');
-        const bShop    = document.getElementById('budget-shopping-input');
-        if (bOverall && !bOverall.value) bOverall.value = state.monthlyBudget;
-        if (bFood && !bFood.value)       bFood.value    = state.foodBudget;
-        if (bShop && !bShop.value)       bShop.value    = state.shoppingBudget;
-
-        renderSubscriptions();
-        renderTransactionList(currentMonth, currentYear);
-        updateDailyChart(daysInMonth);
-        updateYearChart();
-
-      }
-
-      function renderTransactionList(currentMonth, currentYear) {
-        const list = document.getElementById('tx-list');
-        const empty = document.getElementById('tx-list-empty');
-        if (!list) return;
-
-        list.innerHTML = '';
-
-        const monthTx = state.transactions
-          .map((tx, index) => ({ ...tx, index }))
-          .filter(tx => {
-            const d = new Date(tx.date);
-            return !isNaN(d) &&
-                   d.getMonth() === currentMonth &&
-                   d.getFullYear() === currentYear;
-          })
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        if (!monthTx.length) {
-          if (empty) empty.style.display = 'block';
-          return;
-        } else if (empty) {
-          empty.style.display = 'none';
-        }
-
-        monthTx.slice(0, 30).forEach(tx => {
-          const row = document.createElement('div');
-          row.className = 'tx-row';
-          const sign = tx.type === 'expense' ? '-' : '+';
-          const d = new Date(tx.date);
-          const dateLabel = isNaN(d) ? tx.date : d.toLocaleDateString('en-GB');
-
-          const descHtml = tx.description
-            ? `<span class="tx-meta">Note: ${tx.description}</span>`
-            : '';
-
-          row.innerHTML = `
-            <div class="tx-main">
-              <span>${tx.category} (${tx.type})</span>
-              <span class="tx-meta">${dateLabel}</span>
-              ${descHtml}
+      state.subscriptions
+        .sort((a, b) => new Date(a.nextDate || '2100-01-01') - new Date(b.nextDate || '2100-01-01'))
+        .forEach(sub => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'subscription-item';
+          wrapper.innerHTML = `
+            <div class="subscription-details">
+              <div class="subscription-name">${sub.name}</div>
+              <div class="subscription-date">Next Renewal: ${sub.nextDate || '-'}</div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="tx-amount ${tx.type}">
-                ${sign}₹${formatINR(tx.amount)}
-              </span>
-              <button class="tx-delete-btn" data-index="${tx.index}">✕</button>
+            <div style="text-align:right;">
+              <div class="subscription-amount">₹${formatINR(sub.amount)} / ${sub.cycle}</div>
+              <div class="subscription-actions">
+                <button data-id="${sub.id}">Delete</button>
+              </div>
             </div>
           `;
-          list.appendChild(row);
+          container.appendChild(wrapper);
         });
 
-        list.querySelectorAll('.tx-delete-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const idx = Number(btn.getAttribute('data-index'));
-            deleteTransaction(idx);
-          });
-        });
-      }
-
-      function populateYearSelect(currentYear, yearViewYear) {
-        const select = document.getElementById('year-select');
-        if (!select) return;
-
-        const yearsSet = new Set();
-        const MIN_YEAR = 2025;
-
-        yearsSet.add(MIN_YEAR);
-
-        state.transactions.forEach(tx => {
-          const d = new Date(tx.date);
-          if (!isNaN(d)) {
-            yearsSet.add(d.getFullYear());
-          }
-        });
-
-        for (let y = MIN_YEAR; y <= currentYear; y++) {
-          yearsSet.add(y);
-        }
-
-        const years = Array.from(yearsSet).sort((a, b) => a - b);
-
-        const previousValue = select.value;
-        select.innerHTML = '';
-
-        years.forEach(y => {
-          const opt = document.createElement('option');
-          opt.value = y;
-          opt.textContent = y;
-          if (String(y) === String(yearViewYear)) opt.selected = true;
-          select.appendChild(opt);
-        });
-
-        if (!select._listenerAttached) {
-          select.addEventListener('change', () => {
-            selectedYearForYearView = Number(select.value);
-            recalcAndRender();
-          });
-          select._listenerAttached = true;
-        }
-
-        if (!previousValue) {
-          selectedYearForYearView = yearViewYear;
-        }
-      }
-
-      function updateDailyChart(daysInMonth) {
-        const canvas = document.getElementById('dailySpendingChart');
-        if (!canvas) return;
-
-        const labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
-
-        if (!dailyChart) {
-          dailyChart = new Chart(canvas, {
-            type: 'bar',
-            data: {
-              labels,
-              datasets: [{
-                label: 'Daily Spending (₹)',
-                data: dailyTotalsForChart,
-                backgroundColor: '#4a90e2',
-                borderRadius: 4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: function (context) {
-                      return '₹' + context.parsed.y.toLocaleString('en-IN');
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: { display: false }
-                },
-                x: {
-                  grid: { display: false }
-                }
-              }
-            }
-          });
-        } else {
-          dailyChart.data.labels = labels;
-          dailyChart.data.datasets[0].data = dailyTotalsForChart;
-          dailyChart.update();
-        }
-      }
-
-      function updateYearChart() {
-        const canvas = document.getElementById('yearlySpendingChart');
-        if (!canvas) return;
-
-        const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-        if (!yearlyChart) {
-          yearlyChart = new Chart(canvas, {
-            type: 'bar',
-            data: {
-              labels: MONTH_LABELS,
-              datasets: [{
-                label: 'Monthly Spending (₹)',
-                data: monthlyTotalsForChart,
-                backgroundColor: '#03A9F4',
-                borderRadius: 5
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: function (context) {
-                      let label = context.dataset.label || '';
-                      if (label) label += ': ';
-                      if (context.parsed.y !== null) {
-                        label += new Intl.NumberFormat('en-IN', {
-                          style: 'currency',
-                          currency: 'INR'
-                        }).format(context.parsed.y);
-                      }
-                      return label;
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: { display: false },
-                  ticks: {
-                    callback: function (value) {
-                      return '₹' + (value / 1000) + 'k';
-                    }
-                  }
-                },
-                x: {
-                  grid: { display: false }
-                }
-              }
-            }
-          });
-          canvas.classList.add('chart-initialized');
-        } else {
-          yearlyChart.data.datasets[0].data = monthlyTotalsForChart;
-          yearlyChart.update();
-        }
-      }
-
-      function initTransactionForm() {
-        const typeEl   = document.getElementById('tx-type');
-        const amountEl = document.getElementById('tx-amount');
-        const catEl    = document.getElementById('tx-category');
-        const descEl   = document.getElementById('tx-description');
-        const dateEl   = document.getElementById('tx-date');
-        const btn      = document.getElementById('tx-add-btn');
-        const msg      = document.getElementById('tx-message');
-
-        if (!btn) return;
-
-        if (dateEl && !dateEl.value) {
-          const today = new Date();
-          const yyyy = today.getFullYear();
-          const mm   = String(today.getMonth() + 1).padStart(2, '0');
-          const dd   = String(today.getDate()).padStart(2, '0');
-          dateEl.value = `${yyyy}-${mm}-${dd}`;
-        }
-
+      container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const type = typeEl.value;
-          const amount = Number(amountEl.value);
-          const category = catEl.value;
-          const description = (descEl.value || '').trim();
-          const date = dateEl.value;
-
-          if (!amount || amount <= 0 || !date) {
-            if (msg) msg.textContent = 'Please enter a valid amount and date.';
-            return;
-          }
-
-          addTransaction({ type, amount, category, date, description });
-
-          if (msg) msg.textContent = 'Saved ✅';
-          amountEl.value = '';
-          descEl.value = '';
-          setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
+          const id = btn.getAttribute('data-id');
+          deleteSubscription(id);
         });
-      }
-
-      function initBudgetForm() {
-        const overallInput  = document.getElementById('budget-overall-input');
-        const foodInput     = document.getElementById('budget-food-input');
-        const shoppingInput = document.getElementById('budget-shopping-input');
-        const saveBtn       = document.getElementById('budget-save-btn');
-        const msg           = document.getElementById('budget-message');
-
-        if (!saveBtn) return;
-
-        overallInput.value  = state.monthlyBudget;
-        foodInput.value     = state.foodBudget;
-        shoppingInput.value = state.shoppingBudget;
-
-        saveBtn.addEventListener('click', () => {
-          const o = Number(overallInput.value);
-          const f = Number(foodInput.value);
-          const s = Number(shoppingInput.value);
-
-          state.monthlyBudget  = o > 0 ? o : 0;
-          state.foodBudget     = f > 0 ? f : 0;
-          state.shoppingBudget = s > 0 ? s : 0;
-
-          saveState();
-          recalcAndRender();
-
-          if (msg) msg.textContent = 'Budgets saved ✅';
-          setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
-        });
-      }
-
-      function initSubscriptionForm() {
-        const nameEl   = document.getElementById('sub-name');
-        const amountEl = document.getElementById('sub-amount');
-        const cycleEl  = document.getElementById('sub-cycle');
-        const dateEl   = document.getElementById('sub-date');
-        const btn      = document.getElementById('sub-add-btn');
-        const msg      = document.getElementById('sub-message');
-
-        if (!btn) return;
-
-        btn.addEventListener('click', () => {
-          const name   = (nameEl.value || '').trim();
-          const amount = Number(amountEl.value);
-          const cycleRaw = cycleEl.value;
-          const date   = dateEl.value;
-
-          if (!name || !amount || amount <= 0) {
-            if (msg) msg.textContent = 'Please enter a name and a valid amount.';
-            return;
-          }
-
-          const cycleMap = {
-            month: 'month',
-            year: 'year',
-            quarter: 'quarter',
-            other: 'cycle'
-          };
-          const cycle = cycleMap[cycleRaw] || 'cycle';
-
-          const newSub = {
-            id: String(Date.now()) + Math.random().toString(36).slice(2),
-            name,
-            amount,
-            cycle,
-            nextDate: date
-          };
-
-          state.subscriptions.push(newSub);
-          saveState();
-          renderSubscriptions();
-
-          nameEl.value = '';
-          amountEl.value = '';
-          dateEl.value = '';
-
-          if (msg) msg.textContent = 'Subscription saved ✅';
-          setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const tabs = document.querySelectorAll('.tab-button');
-        const contents = document.querySelectorAll('.tab-content');
-
-        function switchTab(targetTab) {
-          tabs.forEach(tab => tab.classList.remove('active'));
-          contents.forEach(content => content.classList.add('hidden'));
-
-          const activeTabButton = document.querySelector(`.tab-button[data-tab="${targetTab}"]`);
-          const activeContent   = document.getElementById(targetTab);
-
-          if (activeTabButton) activeTabButton.classList.add('active');
-          if (activeContent)   activeContent.classList.remove('hidden');
-        }
-
-        tabs.forEach(button => {
-          button.addEventListener('click', (event) => {
-            const targetTab = event.currentTarget.getAttribute('data-tab');
-            switchTab(targetTab);
-          });
-        });
-
-        contents.forEach(content => {
-          if (content.id !== 'home') content.classList.add('hidden');
-          else content.classList.remove('hidden');
-        });
-
-        loadState();
-
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        selectedYearForYearView = currentYear;
-
-        recalcAndRender();
-        populateYearSelect(currentYear, selectedYearForYearView);
-        initTransactionForm();
-        initBudgetForm();
-        initSubscriptionForm();
       });
-    </script>
+    }
 
-    <!-- Service worker registration for PWA -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .catch(err => console.log('SW registration failed', err));
+    function populateYearSelect(currentYear, yearViewYear) {
+      const select = document.getElementById('year-select');
+      if (!select) return;
+
+      const yearsSet = new Set();
+      const MIN_YEAR = 2025;
+
+      yearsSet.add(MIN_YEAR);
+
+      state.transactions.forEach(tx => {
+        const d = new Date(tx.date);
+        if (!isNaN(d)) {
+          yearsSet.add(d.getFullYear());
+        }
+      });
+
+      for (let y = MIN_YEAR; y <= currentYear; y++) {
+        yearsSet.add(y);
       }
-    </script>
+
+      const years = Array.from(yearsSet).sort((a, b) => a - b);
+
+      const previousValue = select.value;
+      select.innerHTML = '';
+
+      years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (String(y) === String(yearViewYear)) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (!select._listenerAttached) {
+        select.addEventListener('change', () => {
+          selectedYearForYearView = Number(select.value);
+          recalcAndRender();
+        });
+        select._listenerAttached = true;
+      }
+
+      if (!previousValue) {
+        selectedYearForYearView = yearViewYear;
+      }
+    }
+
+    function recalcAndRender() {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const yearViewYear = selectedYearForYearView || currentYear;
+
+      const yearHeader = document.getElementById('year-header');
+      if (yearHeader) {
+        yearHeader.textContent = 'Year ' + yearViewYear;
+      }
+
+      populateYearSelect(currentYear, yearViewYear);
+
+      const daysInMonth  = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const dailyTotals  = Array(daysInMonth).fill(0);
+
+      let monthIncome = 0;
+      let monthExpense = 0;
+      let yearIncome = 0;
+      let yearExpense = 0;
+      let todayExpense = 0;
+
+      const categoryMonth = {
+        Food: 0,
+        Shopping: 0,
+        Transport: 0,
+        Bills: 0,
+        Other: 0
+      };
+
+      const categoryYear = {
+        Food: 0,
+        Shopping: 0,
+        Transport: 0,
+        Bills: 0,
+        Subs: 0,
+        Other: 0
+      };
+
+      const monthlyTotals = Array(12).fill(0);          // expenses
+      const monthlyIncomeTotals = Array(12).fill(0);    // income
+
+      state.transactions.forEach((tx) => {
+        const d = new Date(tx.date);
+        if (isNaN(d)) return;
+
+        const isThisMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        const isThisYear  = d.getFullYear() === yearViewYear;
+        const isToday     = d.getDate() === now.getDate() &&
+                            d.getMonth() === now.getMonth() &&
+                            d.getFullYear() === now.getFullYear();
+
+        if (tx.type === 'income') {
+          if (isThisMonth) monthIncome += tx.amount;
+          if (isThisYear) {
+            yearIncome += tx.amount;
+            monthlyIncomeTotals[d.getMonth()] += tx.amount;
+          }
+        } else if (tx.type === 'expense') {
+          if (isThisMonth) {
+            monthExpense += tx.amount;
+
+            if (categoryMonth[tx.category] !== undefined) {
+              categoryMonth[tx.category] += tx.amount;
+            } else {
+              categoryMonth.Other += tx.amount;
+            }
+
+            const dayIndex = d.getDate() - 1;
+            if (dayIndex >= 0 && dayIndex < daysInMonth) {
+              dailyTotals[dayIndex] += tx.amount;
+            }
+          }
+
+          if (isThisYear) {
+            yearExpense += tx.amount;
+            let cat = tx.category;
+            if (!['Food','Shopping','Transport','Bills','Subs'].includes(cat)) cat = 'Other';
+            categoryYear[cat] += tx.amount;
+            monthlyTotals[d.getMonth()] += tx.amount;
+          }
+
+          if (isToday) {
+            todayExpense += tx.amount;
+          }
+        }
+      });
+
+      monthlyTotalsForChart = monthlyTotals.slice();          // expenses
+      monthlyIncomeForChart = monthlyIncomeTotals.slice();    // income
+      dailyTotalsForChart = dailyTotals.slice();
+
+      const monthSaved = monthIncome - monthExpense;
+      const yearSaved  = yearIncome  - yearExpense;
+
+      const mInc = document.getElementById('month-income');
+      const mSp  = document.getElementById('month-spent');
+      const mSa  = document.getElementById('month-saved');
+      if (mInc) mInc.textContent = formatINR(Math.max(0, monthIncome));
+      if (mSp)  mSp.textContent  = formatINR(Math.max(0, monthExpense));
+      if (mSa)  mSa.textContent  = formatINR(monthSaved);
+
+      const yInc = document.getElementById('year-income');
+      const ySp  = document.getElementById('year-spent');
+      const ySa  = document.getElementById('year-saved');
+      if (yInc) yInc.textContent = formatINR(Math.max(0, yearIncome));
+      if (ySp)  ySp.textContent  = formatINR(Math.max(0, yearExpense));
+      if (ySa)  ySa.textContent  = formatINR(yearSaved);
+
+      const mSpHome   = document.getElementById('month-spent-home');
+      const savedHome = document.getElementById('saved-home');
+      if (mSpHome)   mSpHome.textContent   = formatINR(Math.max(0, monthExpense));
+      if (savedHome) savedHome.textContent = formatINR(monthSaved);
+
+      const spentTodayEl = document.getElementById('spent-today');
+      const dailyMsgEl   = document.getElementById('daily-message');
+
+      if (spentTodayEl) spentTodayEl.textContent = '₹' + formatINR(todayExpense);
+
+      if (dailyMsgEl) {
+        if (todayExpense === 0 && monthExpense === 0 && monthIncome === 0) {
+          dailyMsgEl.textContent = 'No spending recorded yet today ✨';
+        } else if (todayExpense === 0) {
+          dailyMsgEl.textContent = 'Nothing spent yet today. Nice control 💪';
+        } else {
+          dailyMsgEl.textContent = 'Nice, today\'s spending is logged 🧾';
+        }
+      }
+
+      const totalCatMonth =
+        categoryMonth.Food + categoryMonth.Shopping + categoryMonth.Transport +
+        categoryMonth.Bills + categoryMonth.Other || 1;
+
+      function setCatBar(idBar, idText, amount) {
+        const bar = document.getElementById(idBar);
+        const txt = document.getElementById(idText);
+        const pct = (amount / totalCatMonth) * 100;
+        if (bar) bar.style.width = pct + '%';
+        if (txt) txt.textContent = '₹' + formatINR(amount);
+      }
+
+      setCatBar('cat-bar-food',      'cat-text-food',      categoryMonth.Food);
+      setCatBar('cat-bar-shopping',  'cat-text-shopping',  categoryMonth.Shopping);
+      setCatBar('cat-bar-transport', 'cat-text-transport', categoryMonth.Transport);
+      setCatBar('cat-bar-bills',     'cat-text-bills',     categoryMonth.Bills);
+
+      function setBudgetBar(idBar, idText, spent, total) {
+        const pct = total > 0 ? Math.min(100, (spent / total) * 100) : 0;
+        const bar = document.getElementById(idBar);
+        const txt = document.getElementById(idText);
+        if (bar) bar.style.width = pct + '%';
+        if (txt) txt.textContent = `₹${formatINR(spent)} / ₹${formatINR(total)} (${Math.round(pct)}%)`;
+      }
+
+      setBudgetBar('bar-overall',  'text-overall',  monthExpense,        state.monthlyBudget);
+      setBudgetBar('bar-food',     'text-food',     categoryMonth.Food,  state.foodBudget);
+      setBudgetBar('bar-shopping', 'text-shopping', categoryMonth.Shopping, state.shoppingBudget);
+
+      const totalYearExpense = Object.values(categoryYear).reduce((a, b) => a + b, 0) || 1;
+
+      function setYearCat(idBar, idText, amount) {
+        const bar = document.getElementById(idBar);
+        const txt = document.getElementById(idText);
+        const pct = (amount / totalYearExpense) * 100;
+        if (bar) bar.style.width = pct + '%';
+        if (txt) txt.textContent = '₹' + formatINR(amount);
+      }
+
+      setYearCat('year-cat-food',      'year-text-food',      categoryYear.Food);
+      setYearCat('year-cat-bills',     'year-text-bills',     categoryYear.Bills);
+      setYearCat('year-cat-shopping',  'year-text-shopping',  categoryYear.Shopping);
+      setYearCat('year-cat-transport', 'year-text-transport', categoryYear.Transport);
+      setYearCat('year-cat-subs',      'year-text-subs',      categoryYear.Subs);
+      setYearCat('year-cat-other',     'year-text-other',     categoryYear.Other);
+
+      const highlightTopMonth  = document.getElementById('highlight-top-month');
+      const highlightBestSav   = document.getElementById('highlight-best-savings');
+      const highlightRatio     = document.getElementById('highlight-ratio');
+      const highlightAvg       = document.getElementById('highlight-avg');
+
+      let maxSpend = 0;
+      let maxSpendMonthIndex = -1;
+      monthlyTotals.forEach((amt, idx) => {
+        if (amt > maxSpend) {
+          maxSpend = amt;
+          maxSpendMonthIndex = idx;
+        }
+      });
+
+      const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      if (highlightTopMonth) {
+        if (maxSpendMonthIndex >= 0) {
+          highlightTopMonth.textContent =
+            'Highest spending month: ' + MONTH_LABELS[maxSpendMonthIndex] +
+            ' (₹' + formatINR(maxSpend) + ')';
+        } else {
+          highlightTopMonth.textContent = 'Highest spending month: –';
+        }
+      }
+
+      if (highlightBestSav) {
+        highlightBestSav.textContent =
+          'Best savings month: (we can wire this later when we track income per month) 😊';
+      }
+
+      if (highlightRatio) {
+        const fb = categoryYear.Food + categoryYear.Bills;
+        const ratio = (fb / totalYearExpense) * 100;
+        highlightRatio.textContent =
+          'Food + Bills share of yearly spending: ' + Math.round(ratio) + '%';
+      }
+
+      if (highlightAvg) {
+        const avg = yearExpense / 12;
+        highlightAvg.textContent =
+          'Average monthly spending: ₹' + formatINR(Math.round(avg || 0));
+      }
+
+      const bOverall = document.getElementById('budget-overall-input');
+      const bFood    = document.getElementById('budget-food-input');
+      const bShop    = document.getElementById('budget-shopping-input');
+      if (bOverall && !bOverall.value) bOverall.value = state.monthlyBudget;
+      if (bFood && !bFood.value)       bFood.value    = state.foodBudget;
+      if (bShop && !bShop.value)       bShop.value    = state.shoppingBudget;
+
+      renderSubscriptions();
+      renderTransactionList(currentMonth, currentYear);
+      updateDailyChart(daysInMonth);
+      updateYearChart();        // expenses
+      updateYearIncomeChart();  // income
+    }
+
+    function renderTransactionList(currentMonth, currentYear) {
+      const list = document.getElementById('tx-list');
+      const empty = document.getElementById('tx-list-empty');
+      if (!list) return;
+
+      list.innerHTML = '';
+
+      const monthTx = state.transactions
+        .map((tx, index) => ({ ...tx, index }))
+        .filter(tx => {
+          const d = new Date(tx.date);
+          return !isNaN(d) &&
+                 d.getMonth() === currentMonth &&
+                 d.getFullYear() === currentYear;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (!monthTx.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+      } else if (empty) {
+        empty.style.display = 'none';
+      }
+
+      monthTx.slice(0, 30).forEach(tx => {
+        const row = document.createElement('div');
+        row.className = 'tx-row';
+        const sign = tx.type === 'expense' ? '-' : '+';
+        const d = new Date(tx.date);
+        const dateLabel = isNaN(d) ? tx.date : d.toLocaleDateString('en-GB');
+
+        const descHtml = tx.description
+          ? `<span class="tx-meta">Note: ${tx.description}</span>`
+          : '';
+
+        row.innerHTML = `
+          <div class="tx-main">
+            <span>${tx.category} (${tx.type})</span>
+            <span class="tx-meta">${dateLabel}</span>
+            ${descHtml}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="tx-amount ${tx.type}">
+              ${sign}₹${formatINR(tx.amount)}
+            </span>
+            <button class="tx-delete-btn" data-index="${tx.index}">✕</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      list.querySelectorAll('.tx-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.getAttribute('data-index'));
+          deleteTransaction(idx);
+        });
+      });
+    }
+
+    function updateDailyChart(daysInMonth) {
+      const canvas = document.getElementById('dailySpendingChart');
+      if (!canvas) return;
+
+      const labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+
+      if (!dailyChart) {
+        dailyChart = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Daily Spending (₹)',
+              data: dailyTotalsForChart,
+              backgroundColor: '#4a90e2',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return '₹' + context.parsed.y.toLocaleString('en-IN');
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { display: false }
+              },
+              x: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else {
+        dailyChart.data.labels = labels;
+        dailyChart.data.datasets[0].data = dailyTotalsForChart;
+        dailyChart.update();
+      }
+    }
+
+    function updateYearChart() {
+      const canvas = document.getElementById('yearlySpendingChart');
+      if (!canvas) return;
+
+      const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      if (!yearlyChart) {
+        yearlyChart = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: MONTH_LABELS,
+            datasets: [{
+              label: 'Monthly Spending (₹)',
+              data: monthlyTotalsForChart,
+              backgroundColor: '#03A9F4',
+              borderRadius: 5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                      label += new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR'
+                      }).format(context.parsed.y);
+                    }
+                    return label;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { display: false },
+                ticks: {
+                  callback: function (value) {
+                    return '₹' + (value / 1000) + 'k';
+                  }
+                }
+              },
+              x: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+        canvas.classList.add('chart-initialized');
+      } else {
+        yearlyChart.data.datasets[0].data = monthlyTotalsForChart;
+        yearlyChart.update();
+      }
+    }
+
+    function updateYearIncomeChart() {
+      const canvas = document.getElementById('yearlyIncomeChart');
+      if (!canvas) return;
+
+      const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      if (!yearlyIncomeChart) {
+        yearlyIncomeChart = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: MONTH_LABELS,
+            datasets: [{
+              label: 'Monthly Income (₹)',
+              data: monthlyIncomeForChart,
+              backgroundColor: '#4CAF50',
+              borderRadius: 5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                      label += new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR'
+                      }).format(context.parsed.y);
+                    }
+                    return label;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { display: false },
+                ticks: {
+                  callback: function (value) {
+                    return '₹' + (value / 1000) + 'k';
+                  }
+                }
+              },
+              x: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else {
+        yearlyIncomeChart.data.datasets[0].data = monthlyIncomeForChart;
+        yearlyIncomeChart.update();
+      }
+    }
+
+    function initTransactionForm() {
+      const typeEl   = document.getElementById('tx-type');
+      const amountEl = document.getElementById('tx-amount');
+      const catEl    = document.getElementById('tx-category');
+      const descEl   = document.getElementById('tx-description');
+      const dateEl   = document.getElementById('tx-date');
+      const btn      = document.getElementById('tx-add-btn');
+      const msg      = document.getElementById('tx-message');
+
+      if (!btn) return;
+
+      if (dateEl && !dateEl.value) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm   = String(today.getMonth() + 1).padStart(2, '0');
+        const dd   = String(today.getDate()).padStart(2, '0');
+        dateEl.value = `${yyyy}-${mm}-${dd}`;
+      }
+
+      btn.addEventListener('click', () => {
+        const type = typeEl.value;
+        const amount = Number(amountEl.value);
+        const category = catEl.value;
+        const description = (descEl.value || '').trim();
+        const date = dateEl.value;
+
+        if (!amount || amount <= 0 || !date) {
+          if (msg) msg.textContent = 'Please enter a valid amount and date.';
+          return;
+        }
+
+        addTransaction({ type, amount, category, date, description });
+
+        if (msg) msg.textContent = 'Saved ✅';
+        amountEl.value = '';
+        descEl.value = '';
+        setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
+      });
+    }
+
+    function initBudgetForm() {
+      const overallInput  = document.getElementById('budget-overall-input');
+      const foodInput     = document.getElementById('budget-food-input');
+      const shoppingInput = document.getElementById('budget-shopping-input');
+      const saveBtn       = document.getElementById('budget-save-btn');
+      const msg           = document.getElementById('budget-message');
+
+      if (!saveBtn) return;
+
+      overallInput.value  = state.monthlyBudget;
+      foodInput.value     = state.foodBudget;
+      shoppingInput.value = state.shoppingBudget;
+
+      saveBtn.addEventListener('click', () => {
+        const o = Number(overallInput.value);
+        const f = Number(foodInput.value);
+        const s = Number(shoppingInput.value);
+
+        state.monthlyBudget  = o > 0 ? o : 0;
+        state.foodBudget     = f > 0 ? f : 0;
+        state.shoppingBudget = s > 0 ? s : 0;
+
+        saveState();
+        recalcAndRender();
+
+        if (msg) msg.textContent = 'Budgets saved ✅';
+        setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
+      });
+    }
+
+    function initSubscriptionForm() {
+      const nameEl   = document.getElementById('sub-name');
+      const amountEl = document.getElementById('sub-amount');
+      const cycleEl  = document.getElementById('sub-cycle');
+      const dateEl   = document.getElementById('sub-date');
+      const btn      = document.getElementById('sub-add-btn');
+      const msg      = document.getElementById('sub-message');
+
+      if (!btn) return;
+
+      btn.addEventListener('click', () => {
+        const name   = (nameEl.value || '').trim();
+        const amount = Number(amountEl.value);
+        const cycleRaw = cycleEl.value;
+        const date   = dateEl.value;
+
+        if (!name || !amount || amount <= 0) {
+          if (msg) msg.textContent = 'Please enter a name and a valid amount.';
+          return;
+        }
+
+        const cycleMap = {
+          month: 'month',
+          year: 'year',
+          quarter: 'quarter',
+          other: 'cycle'
+        };
+        const cycle = cycleMap[cycleRaw] || 'cycle';
+
+        const newSub = {
+          id: String(Date.now()) + Math.random().toString(36).slice(2),
+          name,
+          amount,
+          cycle,
+          nextDate: date
+        };
+
+        state.subscriptions.push(newSub);
+        saveState();
+        renderSubscriptions();
+
+        nameEl.value = '';
+        amountEl.value = '';
+        dateEl.value = '';
+
+        if (msg) msg.textContent = 'Subscription saved ✅';
+        setTimeout(() => { if (msg) msg.textContent = ''; }, 1500);
+      });
+    }
+
+    /* 🔐 Password / login logic */
+    function initAuth() {
+      const overlay    = document.getElementById('auth-overlay');
+      const setupCard  = document.getElementById('auth-setup-card');
+      const loginCard  = document.getElementById('auth-login-card');
+
+      const setupPass  = document.getElementById('auth-setup-pass');
+      const setupPass2 = document.getElementById('auth-setup-pass2');
+      const setupBtn   = document.getElementById('auth-setup-btn');
+      const setupMsg   = document.getElementById('auth-setup-msg');
+
+      const loginPass  = document.getElementById('auth-login-pass');
+      const loginBtn   = document.getElementById('auth-login-btn');
+      const loginMsg   = document.getElementById('auth-login-msg');
+
+      if (!overlay) return;
+
+      function showSetup() {
+        overlay.classList.remove('hidden');
+        setupCard.classList.remove('hidden');
+        loginCard.classList.add('hidden');
+        isUnlocked = false;
+      }
+
+      function showLogin() {
+        overlay.classList.remove('hidden');
+        setupCard.classList.add('hidden');
+        loginCard.classList.remove('hidden');
+        isUnlocked = false;
+      }
+
+      function unlock() {
+        overlay.classList.add('hidden');
+        isUnlocked = true;
+        const now = Date.now();
+        localStorage.setItem(LOCK_TIME_KEY, String(now));
+      }
+
+      const existingPassword = localStorage.getItem(PASSWORD_KEY);
+
+      if (!existingPassword) {
+        showSetup();
+      } else {
+        showLogin();
+      }
+
+      setupBtn.addEventListener('click', () => {
+        const p1 = (setupPass.value || '').trim();
+        const p2 = (setupPass2.value || '').trim();
+
+        if (!p1 || p1.length < 4) {
+          setupMsg.textContent = 'Use at least 4 characters.';
+          return;
+        }
+        if (p1 !== p2) {
+          setupMsg.textContent = 'Passwords do not match.';
+          return;
+        }
+
+        localStorage.setItem(PASSWORD_KEY, p1);
+        setupPass.value = '';
+        setupPass2.value = '';
+        setupMsg.textContent = '';
+        showLogin();
+      });
+
+      loginBtn.addEventListener('click', () => {
+        const p = (loginPass.value || '').trim();
+        const stored = localStorage.getItem(PASSWORD_KEY);
+        if (p && stored && p === stored) {
+          loginPass.value = '';
+          loginMsg.textContent = '';
+          unlock();
+        } else {
+          loginMsg.textContent = 'Wrong password. Try again.';
+        }
+      });
+
+      // auto-lock after 1 hour
+      setInterval(() => {
+        if (!isUnlocked) return;
+        const storedTime = Number(localStorage.getItem(LOCK_TIME_KEY) || '0');
+        const now = Date.now();
+        const diff = now - storedTime;
+        if (diff >= 60 * 60 * 1000) { // 1 hour
+          showLogin();
+        }
+      }, 60 * 1000); // check every minute
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tab-button');
+      const contents = document.querySelectorAll('.tab-content');
+
+      function switchTab(targetTab) {
+        tabs.forEach(tab => tab.classList.remove('active'));
+        contents.forEach(content => content.classList.add('hidden'));
+
+        const activeTabButton = document.querySelector(`.tab-button[data-tab="${targetTab}"]`);
+        const activeContent   = document.getElementById(targetTab);
+
+        if (activeTabButton) activeTabButton.classList.add('active');
+        if (activeContent)   activeContent.classList.remove('hidden');
+      }
+
+      tabs.forEach(button => {
+        button.addEventListener('click', (event) => {
+          const targetTab = event.currentTarget.getAttribute('data-tab');
+          switchTab(targetTab);
+        });
+      });
+
+      contents.forEach(content => {
+        if (content.id !== 'home') content.classList.add('hidden');
+        else content.classList.remove('hidden');
+      });
+
+      loadState();
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      selectedYearForYearView = currentYear;
+
+      recalcAndRender();
+      initTransactionForm();
+      initBudgetForm();
+      initSubscriptionForm();
+      initAuth();
+    });
+  </script>
+
+  <!-- Service worker registration for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .catch(err => console.log('SW registration failed', err));
+    }
+  </script>
 </body>
 </html>
