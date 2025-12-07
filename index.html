@@ -488,6 +488,11 @@
           <input type="password" id="auth-setup-pass2">
         </label>
       </div>
+      <div style="text-align:left;font-size:0.8em;margin:4px 0 10px;">
+        <label>
+          <input type="checkbox" id="auth-setup-show"> Show password
+        </label>
+      </div>
       <button id="auth-setup-btn">Save password</button>
       <p id="auth-setup-msg" class="auth-msg"></p>
     </div>
@@ -502,7 +507,17 @@
           <input type="password" id="auth-login-pass">
         </label>
       </div>
+      <div style="text-align:left;font-size:0.8em;margin:4px 0 10px;">
+        <label>
+          <input type="checkbox" id="auth-login-show"> Show password
+        </label>
+      </div>
       <button id="auth-login-btn">Unlock</button>
+      <button id="auth-reset-btn"
+              style="margin-top:8px;width:100%;padding:8px;border-radius:999px;border:none;
+                     background:#ffe0e0;color:#b00020;font-size:0.85em;cursor:pointer;">
+        Forgot password? Reset app (clears data)
+      </button>
       <p id="auth-login-msg" class="auth-msg"></p>
     </div>
   </div>
@@ -1593,10 +1608,13 @@
       const setupPass2 = document.getElementById('auth-setup-pass2');
       const setupBtn   = document.getElementById('auth-setup-btn');
       const setupMsg   = document.getElementById('auth-setup-msg');
+      const setupShow  = document.getElementById('auth-setup-show');
 
       const loginPass  = document.getElementById('auth-login-pass');
       const loginBtn   = document.getElementById('auth-login-btn');
       const loginMsg   = document.getElementById('auth-login-msg');
+      const loginShow  = document.getElementById('auth-login-show');
+      const resetBtn   = document.getElementById('auth-reset-btn');
 
       if (!overlay) return;
 
@@ -1627,6 +1645,20 @@
         showSetup();
       } else {
         showLogin();
+      }
+
+      // show/hide password toggles
+      if (setupShow) {
+        setupShow.addEventListener('change', () => {
+          const type = setupShow.checked ? 'text' : 'password';
+          setupPass.type = type;
+          setupPass2.type = type;
+        });
+      }
+      if (loginShow) {
+        loginShow.addEventListener('change', () => {
+          loginPass.type = loginShow.checked ? 'text' : 'password';
+        });
       }
 
       setupBtn.addEventListener('click', () => {
@@ -1660,6 +1692,33 @@
           loginMsg.textContent = 'Wrong password. Try again.';
         }
       });
+
+      // Forgot password → full reset (clears data & password)
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          const ok = window.confirm(
+            'This will reset the app on this device and delete all saved data (transactions, budgets, subscriptions, password). Continue?'
+          );
+          if (!ok) return;
+
+          localStorage.removeItem(PASSWORD_KEY);
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LOCK_TIME_KEY);
+
+          // reset in-memory state
+          state = {
+            transactions: [],
+            monthlyBudget: 44000,
+            foodBudget: 15000,
+            shoppingBudget: 10000,
+            subscriptions: []
+          };
+
+          loginMsg.textContent = '';
+          showSetup();
+          recalcAndRender();
+        });
+      }
 
       // auto-lock after 1 hour
       setInterval(() => {
