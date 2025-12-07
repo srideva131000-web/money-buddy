@@ -339,9 +339,7 @@
 
     #tx-add-btn,
     #budget-save-btn,
-    #sub-add-btn,
-    #auth-setup-btn,
-    #auth-login-btn {
+    #sub-add-btn {
       width: 100%;
       padding: 10px;
       border-radius: 999px;
@@ -353,9 +351,7 @@
 
     #tx-add-btn:hover,
     #budget-save-btn:hover,
-    #sub-add-btn:hover,
-    #auth-setup-btn:hover,
-    #auth-login-btn:hover {
+    #sub-add-btn:hover {
       box-shadow: var(--shadow-soft);
     }
 
@@ -398,46 +394,6 @@
       display: none;
     }
 
-    /* 🔐 Login / Password overlay */
-    .auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, var(--color-background-start), var(--color-background-end));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    .auth-card {
-      background: var(--color-card);
-      border-radius: 24px;
-      padding: 24px 20px;
-      width: 90%;
-      max-width: 380px;
-      box-shadow: var(--shadow-soft);
-      text-align: center;
-    }
-
-    .auth-card h2 {
-      margin-top: 0;
-      margin-bottom: 8px;
-    }
-
-    .auth-card p {
-      margin-top: 4px;
-      margin-bottom: 12px;
-      font-size: 0.9em;
-      color: #555;
-    }
-
-    .auth-msg {
-      font-size: 12px;
-      color: #F44336;
-      margin-top: 6px;
-      min-height: 16px;
-    }
-
     @media (max-width: 600px) {
       .app-container {
         padding: 10px;
@@ -469,58 +425,6 @@
   </style>
 </head>
 <body>
-
-  <!-- 🔐 Password / Login overlay -->
-  <div id="auth-overlay" class="auth-overlay">
-    <!-- First-time setup card -->
-    <div class="auth-card" id="auth-setup-card">
-      <h2>Set your password 🔐</h2>
-      <p>You’ll use this to unlock Money Buddy on this device.</p>
-      <div class="form-row">
-        <label>
-          Password
-          <input type="password" id="auth-setup-pass">
-        </label>
-      </div>
-      <div class="form-row">
-        <label>
-          Confirm password
-          <input type="password" id="auth-setup-pass2">
-        </label>
-      </div>
-      <div style="text-align:left;font-size:0.8em;margin:4px 0 10px;">
-        <label>
-          <input type="checkbox" id="auth-setup-show"> Show password
-        </label>
-      </div>
-      <button id="auth-setup-btn">Save password</button>
-      <p id="auth-setup-msg" class="auth-msg"></p>
-    </div>
-
-    <!-- Normal login card -->
-    <div class="auth-card hidden" id="auth-login-card">
-      <h2>Unlock Money Buddy 🔓</h2>
-      <p>Enter your password to continue.</p>
-      <div class="form-row">
-        <label>
-          Password
-          <input type="password" id="auth-login-pass">
-        </label>
-      </div>
-      <div style="text-align:left;font-size:0.8em;margin:4px 0 10px;">
-        <label>
-          <input type="checkbox" id="auth-login-show"> Show password
-        </label>
-      </div>
-      <button id="auth-login-btn">Unlock</button>
-      <button id="auth-reset-btn"
-              style="margin-top:8px;width:100%;padding:8px;border-radius:999px;border:none;
-                     background:#ffe0e0;color:#b00020;font-size:0.85em;cursor:pointer;">
-        Forgot password? Reset app (clears data)
-      </button>
-      <p id="auth-login-msg" class="auth-msg"></p>
-    </div>
-  </div>
 
   <div class="title-bar">
     Money Buddy 💰
@@ -599,7 +503,7 @@
         <div class="form-row">
           <label>
             Description (optional):
-            <input id="tx-description" type="text" placeholder="Breakfast with friends, cab to airport, etc.">
+            <input id="tx-description" type="text" placeholder="Breakfast, cab, etc.">
           </label>
         </div>
         <div class="form-row">
@@ -865,8 +769,6 @@
 
   <script>
     const STORAGE_KEY = 'moneyBuddyData_v2';
-    const PASSWORD_KEY = 'moneyBuddyPassword';
-    const LOCK_TIME_KEY = 'moneyBuddyLastUnlock';
 
     let state = {
       transactions: [],
@@ -885,7 +787,6 @@
     let dailyChart = null;
     let dailyTotalsForChart = [];
     let selectedYearForYearView = null; // null = current year
-    let isUnlocked = false;
 
     function loadState() {
       try {
@@ -1598,140 +1499,6 @@
       });
     }
 
-    /* 🔐 Password / login logic */
-    function initAuth() {
-      const overlay    = document.getElementById('auth-overlay');
-      const setupCard  = document.getElementById('auth-setup-card');
-      const loginCard  = document.getElementById('auth-login-card');
-
-      const setupPass  = document.getElementById('auth-setup-pass');
-      const setupPass2 = document.getElementById('auth-setup-pass2');
-      const setupBtn   = document.getElementById('auth-setup-btn');
-      const setupMsg   = document.getElementById('auth-setup-msg');
-      const setupShow  = document.getElementById('auth-setup-show');
-
-      const loginPass  = document.getElementById('auth-login-pass');
-      const loginBtn   = document.getElementById('auth-login-btn');
-      const loginMsg   = document.getElementById('auth-login-msg');
-      const loginShow  = document.getElementById('auth-login-show');
-      const resetBtn   = document.getElementById('auth-reset-btn');
-
-      if (!overlay) return;
-
-      function showSetup() {
-        overlay.classList.remove('hidden');
-        setupCard.classList.remove('hidden');
-        loginCard.classList.add('hidden');
-        isUnlocked = false;
-      }
-
-      function showLogin() {
-        overlay.classList.remove('hidden');
-        setupCard.classList.add('hidden');
-        loginCard.classList.remove('hidden');
-        isUnlocked = false;
-      }
-
-      function unlock() {
-        overlay.classList.add('hidden');
-        isUnlocked = true;
-        const now = Date.now();
-        localStorage.setItem(LOCK_TIME_KEY, String(now));
-      }
-
-      const existingPassword = localStorage.getItem(PASSWORD_KEY);
-
-      if (!existingPassword) {
-        showSetup();
-      } else {
-        showLogin();
-      }
-
-      // show/hide password toggles
-      if (setupShow) {
-        setupShow.addEventListener('change', () => {
-          const type = setupShow.checked ? 'text' : 'password';
-          setupPass.type = type;
-          setupPass2.type = type;
-        });
-      }
-      if (loginShow) {
-        loginShow.addEventListener('change', () => {
-          loginPass.type = loginShow.checked ? 'text' : 'password';
-        });
-      }
-
-      setupBtn.addEventListener('click', () => {
-        const p1 = (setupPass.value || '').trim();
-        const p2 = (setupPass2.value || '').trim();
-
-        if (!p1 || p1.length < 4) {
-          setupMsg.textContent = 'Use at least 4 characters.';
-          return;
-        }
-        if (p1 !== p2) {
-          setupMsg.textContent = 'Passwords do not match.';
-          return;
-        }
-
-        localStorage.setItem(PASSWORD_KEY, p1);
-        setupPass.value = '';
-        setupPass2.value = '';
-        setupMsg.textContent = '';
-        showLogin();
-      });
-
-      loginBtn.addEventListener('click', () => {
-        const p = (loginPass.value || '').trim();
-        const stored = localStorage.getItem(PASSWORD_KEY);
-        if (p && stored && p === stored) {
-          loginPass.value = '';
-          loginMsg.textContent = '';
-          unlock();
-        } else {
-          loginMsg.textContent = 'Wrong password. Try again.';
-        }
-      });
-
-      // Forgot password → full reset (clears data & password)
-      if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-          const ok = window.confirm(
-            'This will reset the app on this device and delete all saved data (transactions, budgets, subscriptions, password). Continue?'
-          );
-          if (!ok) return;
-
-          localStorage.removeItem(PASSWORD_KEY);
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(LOCK_TIME_KEY);
-
-          // reset in-memory state
-          state = {
-            transactions: [],
-            monthlyBudget: 44000,
-            foodBudget: 15000,
-            shoppingBudget: 10000,
-            subscriptions: []
-          };
-
-          loginMsg.textContent = '';
-          showSetup();
-          recalcAndRender();
-        });
-      }
-
-      // auto-lock after 1 hour
-      setInterval(() => {
-        if (!isUnlocked) return;
-        const storedTime = Number(localStorage.getItem(LOCK_TIME_KEY) || '0');
-        const now = Date.now();
-        const diff = now - storedTime;
-        if (diff >= 60 * 60 * 1000) { // 1 hour
-          showLogin();
-        }
-      }, 60 * 1000); // check every minute
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       const tabs = document.querySelectorAll('.tab-button');
       const contents = document.querySelectorAll('.tab-content');
@@ -1769,7 +1536,6 @@
       initTransactionForm();
       initBudgetForm();
       initSubscriptionForm();
-      initAuth();
     });
   </script>
 
